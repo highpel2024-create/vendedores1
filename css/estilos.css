@@ -1,0 +1,33 @@
+body {
+  font-family: Arial;
+  margin: 20px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hero {
+  text-align: center;
+  margin-top: 50px;
+}
+
+.btn {
+  padding: 10px;
+  background: green;
+  color: white;
+  margin: 5px;
+  text-decoration: none;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+}
+
+input, textarea, button {
+  margin: 5px 0;
+  padding: 8px;
+}

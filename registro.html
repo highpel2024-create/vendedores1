@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<h2>Registro</h2>
+
+<select id="tipo">
+  <option value="vendedor">Vendedor</option>
+  <option value="empresa">Empresa</option>
+</select>
+
+<form id="formRegistro">
+  <input type="text" placeholder="Nombre" required>
+  <input type="email" placeholder="Email" required>
+  <input type="password" placeholder="Contraseña" required>
+  <input type="text" placeholder="Ciudad">
+
+  <textarea placeholder="Descripción"></textarea>
+
+  <button type="submit">Registrarse</button>
+</form>
+
+<script src="js/app.js"></script>
+</body>
+</html>
