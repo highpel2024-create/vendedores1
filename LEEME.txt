@@ -1,0 +1,45 @@
+RED DE VENDEDORES Y EMPRESAS ONLINE - VERSION MEJORADA
+
+Esta versión incluye:
+- Registro e inicio de sesión
+- Perfiles de vendedores y empresas
+- Reseñas y denuncias
+- Favoritos
+- Panel administrador
+- Plan premium con Mercado Pago / demo
+- NUEVO: chat interno entre usuarios
+- NUEVO: bandeja de conversaciones
+- NUEVO: contador de mensajes no leídos
+- NUEVO: botón "Chatear" en perfiles y favoritos
+
+IMPORTANTE
+- Esta app usa PostgreSQL.
+- Al iniciar, crea automáticamente las tablas que faltan.
+- En esta versión también se crean automáticamente:
+  - favorites
+  - conversations
+  - messages
+
+Variables de entorno necesarias:
+- DATABASE_URL=
+- JWT_SECRET=
+- APP_BASE_URL=
+- MP_ACCESS_TOKEN= (opcional para checkout real)
+- MP_PUBLIC_KEY= (opcional)
+
+Acceso demo:
+- admin@demo.com
+- admin123
+
+Cómo publicar:
+1) Subí los archivos al hosting.
+2) Configurá las variables de entorno.
+3) Hacé el deploy.
+4) La base se inicializa sola al primer arranque.
+
+Sugerencia comercial:
+Podés cobrar más agregando después:
+- planes por cantidad de mensajes
+- chat destacado para premium
+- bloqueo de contacto directo para cuentas free
+- solicitudes de presupuesto dentro del chat

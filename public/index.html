@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Red de Vendedores y Empresas Online</title>
+  <style>
+    :root{
+      --bg:#0f172a;--panel:#111827;--soft:#1f2937;--line:#334155;--text:#e5e7eb;--muted:#94a3b8;
+      --accent:#22c55e;--accent2:#38bdf8;--violet:#8b5cf6;--danger:#ef4444;--shadow:0 10px 30px rgba(0,0,0,.25);--radius:18px;
+    }
+    *{box-sizing:border-box} html,body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#0f172a 0%,#111827 100%);color:var(--text)}
+    body{min-height:100vh}.container{max-width:1280px;margin:0 auto;padding:20px}.hero,.card{background:rgba(11,18,32,.95);border:1px solid rgba(255,255,255,.08);border-radius:22px;box-shadow:var(--shadow)}
+    .hero{padding:24px;margin-bottom:18px;background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(56,189,248,.14),rgba(139,92,246,.14))}
+    .card{padding:18px}.grid{display:grid;gap:16px}.grid-2{grid-template-columns:repeat(2,1fr)}.grid-3{grid-template-columns:repeat(3,1fr)}.grid-4{grid-template-columns:repeat(4,1fr)}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 20px}.tab-btn,.btn,button,input,select,textarea{font:inherit}
+    .tab-btn,.btn{border:1px solid rgba(255,255,255,.08);background:#172033;color:var(--text);padding:12px 16px;border-radius:14px;cursor:pointer}
+    .tab-btn.active,.btn-primary{background:var(--accent);color:#052e16;font-weight:bold}.btn-secondary{background:var(--accent2);color:#082f49;font-weight:bold}.btn-violet{background:var(--violet);color:#fff;font-weight:bold}.btn-danger{background:var(--danger);color:#fff}
+    label{display:block;margin-bottom:6px;color:#cbd5e1;font-size:14px} input,select,textarea{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#0f172a;color:var(--text);outline:none}
+    textarea{min-height:100px;resize:vertical}.form-grid{display:grid;gap:12px;grid-template-columns:repeat(2,1fr)}.form-grid-3{display:grid;gap:12px;grid-template-columns:repeat(3,1fr)}.toolbar{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:12px}
+    .item{border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px;background:rgba(15,23,42,.8);margin-bottom:12px}.item-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;font-size:12px;font-weight:bold;background:rgba(56,189,248,.14);color:#bae6fd;border:1px solid rgba(56,189,248,.25)}
+    .type-vendedor{background:rgba(34,197,94,.14);color:#bbf7d0;border-color:rgba(34,197,94,.28)} .type-empresa{background:rgba(245,158,11,.14);color:#fde68a;border-color:rgba(245,158,11,.28)}
+    .premium{background:rgba(139,92,246,.18);color:#ddd6fe;border-color:rgba(139,92,246,.28)} .verified{background:rgba(34,197,94,.14);color:#bbf7d0;border-color:rgba(34,197,94,.28)}
+    .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.06);font-size:12px}.row{display:flex;gap:10px;flex-wrap:wrap}.hidden{display:none!important}
+    .muted{color:var(--muted)} .small{font-size:13px} .metric .value{font-size:34px;font-weight:bold}.metric .label{color:var(--muted)} .review{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px;margin-top:8px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.notice{margin-top:12px;padding:12px;border-radius:12px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.2)}
+    .btn.active-filter{outline:2px solid rgba(255,255,255,.2)}
+    .section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .heart{font-size:18px;line-height:1}
+    .empty{padding:18px;border:1px dashed rgba(255,255,255,.14);border-radius:16px;color:var(--muted)}
+    .chat-layout{display:grid;grid-template-columns:340px 1fr;gap:16px}.chat-sidebar{max-height:68vh;overflow:auto}.chat-thread{display:flex;flex-direction:column;min-height:68vh}
+    .chat-list-item{padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.03);margin-bottom:10px;cursor:pointer}
+    .chat-list-item.active{outline:2px solid rgba(56,189,248,.35);background:rgba(56,189,248,.08)}
+    .chat-messages{flex:1;overflow:auto;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;background:rgba(15,23,42,.55)}
+    .bubble{max-width:78%;padding:12px 14px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,.08)}
+    .bubble.me{margin-left:auto;background:rgba(34,197,94,.12)} .bubble.other{background:rgba(255,255,255,.05)}
+    .unread-dot{display:inline-flex;min-width:22px;height:22px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:var(--accent);color:#052e16;font-size:12px;font-weight:bold}
+    .chat-compose{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
+    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="hero">
+    <h1>Red de Vendedores y Empresas Online</h1>
+    <p class="muted">Lista para publicar online, seguir mejorando y cobrar planes con Mercado Pago.</p>
+    <div class="row">
+      <span class="pill">Online</span>
+      <span class="pill">PostgreSQL</span>
+      <span class="pill">Admin</span>
+      <span class="pill">Mercado Pago</span>
+    </div>
+  </div>
+
+  <div id="guestView">
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Ingresar</h3>
+        <div class="form-grid">
+          <div><label>Email</label><input id="loginEmail" placeholder="admin@demo.com"></div>
+          <div><label>Contraseña</label><input id="loginPassword" type="password" placeholder="admin123"></div>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn btn-primary" onclick="login()">Ingresar</button>
+        <div class="small muted" style="margin-top:10px">Admin demo: admin@demo.com / admin123</div>
+      </div>
+      <div class="card">
+        <h3>Registrarse</h3>
+        <div class="form-grid">
+          <div><label>Nombre</label><input id="registerName"></div>
+          <div><label>Email</label><input id="registerEmail" type="email"></div>
+          <div><label>Contraseña</label><input id="registerPassword" type="password"></div>
+          <div><label>Rol</label><select id="registerRole"><option value="vendedor">Vendedor</option><option value="empresa">Empresa</option></select></div>
+        </div>
+        <div style="height:10px"></div>
+        <button class="btn btn-secondary" onclick="registerUser()">Crear cuenta</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="appView" class="hidden">
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <strong id="welcomeText">Bienvenido</strong>
+          <div class="small muted" id="roleText"></div>
+        </div>
+        <div class="row">
+          <button class="btn" onclick="loadProfiles()">Actualizar</button>
+          <button class="btn btn-danger" onclick="logout()">Salir</button>
+        </div>
+      </div>
+      <div class="notice">Cuando configures tu cuenta de Mercado Pago en variables de entorno, el botón "Comprar Premium" va a abrir el checkout real. Mientras tanto podés usar el botón demo.</div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="inicio">Inicio</button>
+      <button class="tab-btn" data-tab="miPerfil">Mi perfil</button>
+      <button class="tab-btn" data-tab="explorar">Explorar</button>
+      <button class="tab-btn hidden" id="favoritesTabBtn" data-tab="favoritos">Favoritos</button>
+      <button class="tab-btn hidden" id="messagesTabBtn" data-tab="mensajes">Mensajes</button>
+      <button class="tab-btn hidden" id="adminTabBtn" data-tab="admin">Admin</button>
+    </div>
+
+    <section id="tab-inicio" class="tab-panel">
+      <div class="grid grid-4" id="metrics"></div>
+      <div class="card" style="margin-top:16px">
+        <h3>Perfiles destacados</h3>
+        <div id="latestProfiles"></div>
+      </div>
+    </section>
+
+    <section id="tab-miPerfil" class="tab-panel hidden">
+      <div class="card">
+        <h3>Mi perfil</h3>
+        <div class="form-grid">
+          <div><label>Nombre</label><input id="profileName"></div>
+          <div><label>Ciudad</label><input id="profileCity"></div>
+          <div><label>Rubro</label><input id="profileIndustry"></div>
+          <div><label>Teléfono</label><input id="profilePhone"></div>
+          <div><label>Plan</label><select id="profilePlan"><option value="free">Free</option><option value="premium">Premium</option></select></div>
+          <div><label>Etiquetas</label><input id="profileTags" placeholder="mayorista, retail, tecnología"></div>
+        </div>
+        <div style="height:10px"></div>
+        <div><label>Descripción</label><textarea id="profileDescription"></textarea></div>
+        <div style="height:12px"></div>
+        <div class="row">
+          <button class="btn btn-primary" onclick="saveMyProfile()">Guardar perfil</button>
+          <button class="btn btn-violet" onclick="buyPremium()">Comprar Premium</button>
+          <button class="btn" onclick="mockUpgrade()">Premium demo</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-explorar" class="tab-panel hidden">
+      <div class="card">
+        <div class="toolbar">
+          <div><label>Buscar</label><input id="searchQ" placeholder="nombre, ciudad, rubro..." oninput="loadProfiles()"></div>
+          <div><label>Tipo</label><select id="searchRole" onchange="loadProfiles()"><option value="todos">Todos</option><option value="vendedor">Vendedor</option><option value="empresa">Empresa</option></select></div>
+          <div><label>Verificado</label><select id="searchVerified" onchange="loadProfiles()"><option value="todos">Todos</option><option value="si">Sí</option><option value="no">No</option></select></div>
+          <div><label>Plan</label><select id="searchPlan" onchange="loadProfiles()"><option value="todos">Todos</option><option value="premium">Premium</option><option value="free">Free</option></select></div>
+          <div><label>Ordenar</label><select id="searchSort" onchange="loadProfiles()"><option value="destacados">Destacados</option><option value="mejor_puntuados">Mejor puntuados</option><option value="mas_recientes">Más recientes</option><option value="alfabetico">A-Z</option></select></div>
+        </div>
+      </div>
+      <div style="height:16px"></div>
+      <div id="profilesList"></div>
+    </section>
+
+    <section id="tab-favoritos" class="tab-panel hidden">
+      <div class="card">
+        <div class="section-title">
+          <h3 style="margin:0">Perfiles guardados</h3>
+          <button class="btn" onclick="loadFavorites(true)">Actualizar</button>
+        </div>
+        <div style="height:12px"></div>
+        <div id="favoritesList" class="empty">Todavía no guardaste perfiles.</div>
+      </div>
+    </section>
+
+
+    <section id="tab-mensajes" class="tab-panel hidden">
+      <div class="chat-layout">
+        <div class="card chat-sidebar">
+          <div class="section-title">
+            <h3 style="margin:0">Conversaciones</h3>
+            <button class="btn" onclick="loadConversations()">Actualizar</button>
+          </div>
+          <div style="height:12px"></div>
+          <div id="conversationsList" class="empty">Todavía no tenés conversaciones.</div>
+        </div>
+        <div class="card chat-thread">
+          <div id="chatHeader" class="empty">Elegí una conversación o iniciá una desde un perfil.</div>
+          <div id="chatMessages" class="chat-messages hidden"></div>
+          <div id="chatComposer" class="chat-compose hidden">
+            <textarea id="messageInput" placeholder="Escribí tu mensaje"></textarea>
+            <button class="btn btn-primary" onclick="sendMessage()">Enviar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-admin" class="tab-panel hidden">
+      <div class="grid grid-4" id="adminStats"></div>
+      <div style="height:16px"></div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Usuarios</h3>
+          <div id="adminUsers"></div>
+        </div>
+        <div class="card">
+          <h3>Denuncias</h3>
+          <div id="adminReports"></div>
+        </div>
+      </div>
+
+      <div style="height:16px"></div>
+
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Perfiles</h3>
+          <div id="adminProfiles"></div>
+        </div>
+        <div class="card">
+          <h3>Reseñas</h3>
+          <div id="adminReviews"></div>
+        </div>
+      </div>
+
+      <div style="height:16px"></div>
+
+      <div class="card">
+        <h3>Pagos recientes</h3>
+        <div id="adminPayments"></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+let token = localStorage.getItem("rve_online_token") || "";
+let currentUser = null;
+let currentProfile = null;
+let profilesCache = [];
+let favoriteIds = [];
+let conversationsCache = [];
+let activeConversationId = "";
+let messagesCache = [];
+
+function authHeaders() {
+  return token ? { "Authorization": "Bearer " + token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
+}
+function esc(text) {
+  return String(text ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+function stars(score) {
+  const rounded = Math.round(Number(score) || 0);
+  return "★".repeat(rounded) + "☆".repeat(5 - rounded);
+}
+function formatMoney(amount, currency = "ARS") {
+  try {
+    return new Intl.NumberFormat("es-AR", { style: "currency", currency }).format(Number(amount) || 0);
+  } catch {
+    return `${currency} ${Number(amount) || 0}`;
+  }
+}
+function normalizePhone(phone) {
+  return String(phone || "").replace(/[^\d]/g, "");
+}
+function showGuest(){ document.getElementById("guestView").classList.remove("hidden"); document.getElementById("appView").classList.add("hidden"); }
+function showApp(){ document.getElementById("guestView").classList.add("hidden"); document.getElementById("appView").classList.remove("hidden"); }
+
+async function api(url, options = {}) {
+  const res = await fetch(url, options);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Error");
+  return data;
+}
+
+async function registerUser() {
+  try {
+    await api("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: document.getElementById("registerName").value.trim(),
+        email: document.getElementById("registerEmail").value.trim(),
+        password: document.getElementById("registerPassword").value,
+        role: document.getElementById("registerRole").value
+      })
+    });
+    alert("Cuenta creada. Ahora iniciá sesión.");
+  } catch (e) { alert(e.message); }
+}
+
+async function login() {
+  try {
+    const data = await api("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: document.getElementById("loginEmail").value.trim(),
+        password: document.getElementById("loginPassword").value
+      })
+    });
+    token = data.token;
+    localStorage.setItem("rve_online_token", token);
+    await loadMe();
+  } catch (e) { alert(e.message); }
+}
+
+function logout() {
+  token = "";
+  currentUser = null;
+  currentProfile = null;
+  favoriteIds = [];
+  conversationsCache = [];
+  activeConversationId = "";
+  messagesCache = [];
+  localStorage.removeItem("rve_online_token");
+  showGuest();
+}
+
+async function loadMe() {
+  try {
+    const data = await api("/api/me", { headers: authHeaders() });
+    currentUser = data.user;
+    currentProfile = data.profile;
+    document.getElementById("welcomeText").textContent = "Bienvenido, " + currentUser.name;
+    document.getElementById("roleText").textContent = "Rol: " + currentUser.role;
+    document.getElementById("adminTabBtn").classList.toggle("hidden", currentUser.role !== "admin");
+    document.getElementById("favoritesTabBtn").classList.toggle("hidden", !token);
+    document.getElementById("messagesTabBtn").classList.toggle("hidden", !token);
+    fillMyProfile();
+    showApp();
+    await loadProfiles();
+    await loadConversations();
+    if (currentUser.role === "admin") await loadAdmin();
+  } catch { logout(); }
+}
+
+function fillMyProfile() {
+  document.getElementById("profileName").value = currentProfile?.name || "";
+  document.getElementById("profileCity").value = currentProfile?.city || "";
+  document.getElementById("profileIndustry").value = currentProfile?.industry || "";
+  document.getElementById("profilePhone").value = currentProfile?.phone || "";
+  document.getElementById("profilePlan").value = currentProfile?.plan || "free";
+  document.getElementById("profileTags").value = (currentProfile?.tags || []).join(", ");
+  document.getElementById("profileDescription").value = currentProfile?.description || "";
+}
+
+async function saveMyProfile() {
+  try {
+    const data = await api("/api/profiles", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        name: document.getElementById("profileName").value.trim(),
+        city: document.getElementById("profileCity").value.trim(),
+        industry: document.getElementById("profileIndustry").value.trim(),
+        phone: document.getElementById("profilePhone").value.trim(),
+        plan: document.getElementById("profilePlan").value,
+        tags: document.getElementById("profileTags").value.split(",").map(x => x.trim()).filter(Boolean),
+        description: document.getElementById("profileDescription").value.trim()
+      })
+    });
+    currentProfile = data.profile;
+    fillMyProfile();
+    alert("Perfil guardado.");
+    await loadProfiles();
+  } catch (e) { alert(e.message); }
+}
+
+async function buyPremium() {
+  try {
+    const data = await api("/api/payments/create-preference", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ plan: "premium" })
+    });
+    const target = data.initPoint || data.sandboxInitPoint;
+    if (!target) throw new Error("No se recibió URL de pago");
+    window.location.href = target;
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function mockUpgrade() {
+  try {
+    const data = await api("/api/payments/mock-upgrade", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({})
+    });
+    currentProfile = data.profile;
+    fillMyProfile();
+    alert("Premium activado en modo demo.");
+    await loadProfiles();
+  } catch (e) { alert(e.message); }
+}
+
+async function loadProfiles() {
+  try {
+    const q = encodeURIComponent(document.getElementById("searchQ")?.value || "");
+    const role = encodeURIComponent(document.getElementById("searchRole")?.value || "todos");
+    const verified = encodeURIComponent(document.getElementById("searchVerified")?.value || "todos");
+    const plan = encodeURIComponent(document.getElementById("searchPlan")?.value || "todos");
+    const sort = encodeURIComponent(document.getElementById("searchSort")?.value || "destacados");
+    const viewerUserId = encodeURIComponent(currentUser?.id || "");
+    const data = await api(`/api/profiles?q=${q}&role=${role}&verified=${verified}&plan=${plan}&sort=${sort}&viewerUserId=${viewerUserId}`);
+    profilesCache = data.profiles;
+    renderProfiles();
+    renderHome();
+    renderFavorites();
+  } catch (e) { console.error(e); }
+}
+
+function metricCard(value, label) {
+  return `<div class="card metric"><div class="value">${value}</div><div class="label">${label}</div></div>`;
+}
+
+function renderHome() {
+  const sellers = profilesCache.filter(p => p.type === "vendedor").length;
+  const companies = profilesCache.filter(p => p.type === "empresa").length;
+  const premium = profilesCache.filter(p => p.plan === "premium").length;
+  const verified = profilesCache.filter(p => p.verified === "si").length;
+  document.getElementById("metrics").innerHTML = [
+    metricCard(profilesCache.length, "Perfiles"),
+    metricCard(sellers, "Vendedores"),
+    metricCard(companies, "Empresas"),
+    metricCard(premium, "Premium"),
+    metricCard(verified, "Verificados"),
+    metricCard(favoriteIds.length, "Guardados")
+  ].join("");
+
+  document.getElementById("latestProfiles").innerHTML = profilesCache.slice(0, 6).map(p => `
+    <div class="item">
+      <div class="item-top">
+        <div>
+          <strong>${esc(p.name)}</strong>
+          <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")}</div>
+        </div>
+        <div class="row">
+          <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
+          <span class="badge premium">${esc(p.plan)}</span>
+          ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
+        </div>
+      </div>
+    </div>
+  `).join("") || `<div class="small muted">No hay perfiles todavía.</div>`;
+}
+
+function renderProfiles() {
+  const box = document.getElementById("profilesList");
+  if (!profilesCache.length) {
+    box.innerHTML = `<div class="card">No hay perfiles.</div>`;
+    return;
+  }
+
+  box.innerHTML = profilesCache.map(p => `
+    <div class="item">
+      <div class="item-top">
+        <div>
+          <h3 style="margin:0 0 6px 0">${esc(p.name)}</h3>
+          <div class="row">
+            <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
+            <span class="badge premium">${esc(p.plan)}</span>
+            ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
+            <span class="pill">${esc(p.city || "Sin ciudad")}</span>
+            <span class="pill">${esc(p.industry || "Sin rubro")}</span>
+          </div>
+        </div>
+        <div>${stars(p.stats.avg)} <span class="small muted">${p.stats.avg ? p.stats.avg.toFixed(1) : "Sin notas"} · ${p.stats.count}</span></div>
+      </div>
+      <div style="height:8px"></div>
+      <div>${esc(p.description || "Sin descripción")}</div>
+      <div style="height:8px"></div>
+      <div class="small muted">Contacto: ${esc(p.email || "")} ${p.phone ? `· ${esc(p.phone)}` : ""}</div>
+      <div class="row" style="margin-top:10px">
+        ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
+        ${p.email ? `<a class="btn" href="mailto:${encodeURIComponent(p.email)}">Email</a>` : ""}
+        ${token && currentProfile && currentProfile.id !== p.id ? `<button class="btn btn-violet" onclick="startConversation('${p.id}')">Chatear</button>` : ""}
+        ${token && currentProfile && currentProfile.id !== p.id ? `<button class="btn btn-secondary" onclick="reviewProfile('${p.id}')">Calificar</button>` : ""}
+        ${token && currentProfile && currentProfile.id !== p.id ? `<button class="btn ${p.isFavorite ? 'active-filter' : ''}" onclick="toggleFavorite('${p.id}')"><span class="heart">${p.isFavorite ? '♥' : '♡'}</span> Guardar</button>` : ""}
+        ${token ? `<button class="btn" onclick="reportProfile('${p.id}')">Denunciar</button>` : ""}
+      </div>
+      <div id="reviews-${p.id}" style="margin-top:10px"></div>
+    </div>
+  `).join("");
+
+  profilesCache.forEach(loadReviewsForProfile);
+}
+
+async function loadReviewsForProfile(profileId) {
+  try {
+    const data = await api("/api/reviews/" + profileId);
+    const box = document.getElementById("reviews-" + profileId);
+    if (!box) return;
+    box.innerHTML = data.reviews.slice(0, 3).map(r => `
+      <div class="review">
+        <strong>${esc(r.authorName)}</strong> · ${stars(r.score)}
+        <div>${esc(r.comment)}</div>
+      </div>
+    `).join("") || `<div class="small muted">Todavía no tiene reseñas.</div>`;
+  } catch {}
+}
+
+async function reviewProfile(profileId) {
+  const score = prompt("Puntaje del 1 al 5", "5");
+  const comment = prompt("Comentario", "Muy buen perfil");
+  if (!score || !comment) return;
+  try {
+    await api("/api/reviews", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ targetProfileId: profileId, score: Number(score), comment })
+    });
+    alert("Reseña guardada.");
+    await loadProfiles();
+    if (currentUser?.role === "admin") await loadAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+async function reportProfile(profileId) {
+  const reason = prompt("Motivo de la denuncia", "Datos sospechosos");
+  if (!reason) return;
+  try {
+    await api("/api/reports", {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({ profileId, reason })
+    });
+    alert("Denuncia registrada.");
+    if (currentUser?.role === "admin") await loadAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+async function loadFavorites(renderOnly = false) {
+  if (!token) {
+    favoriteIds = [];
+    renderFavorites();
+    return;
+  }
+  try {
+    const data = await api("/api/favorites", { headers: authHeaders() });
+    favoriteIds = data.favorites || [];
+    renderFavorites();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function renderFavorites() {
+  const box = document.getElementById("favoritesList");
+  if (!box) return;
+  const items = profilesCache.filter(p => favoriteIds.includes(p.id));
+  if (!items.length) {
+    box.className = "empty";
+    box.innerHTML = "Todavía no guardaste perfiles.";
+    return;
+  }
+  box.className = "";
+  box.innerHTML = items.map(p => `
+    <div class="review">
+      <strong>${esc(p.name)}</strong>
+      <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
+      <div style="margin-top:8px">${esc(p.description || "Sin descripción")}</div>
+      <div class="row" style="margin-top:10px">
+        ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
+        ${p.email ? `<a class="btn" href="mailto:${encodeURIComponent(p.email)}">Email</a>` : ""}
+        <button class="btn btn-violet" onclick="startConversation('${p.id}')">Chatear</button>
+        <button class="btn btn-danger" onclick="toggleFavorite('${p.id}')">Quitar</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function toggleFavorite(profileId) {
+  if (!token) return alert("Primero iniciá sesión.");
+  try {
+    const isFav = favoriteIds.includes(profileId);
+    await api(isFav ? ("/api/favorites/" + profileId) : "/api/favorites", {
+      method: isFav ? "DELETE" : "POST",
+      headers: authHeaders(),
+      body: isFav ? undefined : JSON.stringify({ profileId })
+    });
+    await loadFavorites(true);
+    await loadProfiles();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+
+async function loadConversations(preferredId = '') {
+  if (!token) {
+    conversationsCache = [];
+    renderConversations();
+    return;
+  }
+  try {
+    const data = await api('/api/conversations', { headers: authHeaders() });
+    conversationsCache = data.conversations || [];
+    if (preferredId) activeConversationId = preferredId;
+    if (!activeConversationId && conversationsCache.length) activeConversationId = conversationsCache[0].id;
+    if (activeConversationId && !conversationsCache.some(c => c.id === activeConversationId)) activeConversationId = conversationsCache[0]?.id || '';
+    renderConversations();
+    if (activeConversationId) await openConversation(activeConversationId, false);
+    else clearConversationPanel();
+  } catch (e) { console.error(e); }
+}
+
+function renderConversations() {
+  const box = document.getElementById('conversationsList');
+  if (!box) return;
+  if (!conversationsCache.length) {
+    box.className = 'empty';
+    box.innerHTML = 'Todavía no tenés conversaciones.';
+    return;
+  }
+  box.className = '';
+  box.innerHTML = conversationsCache.map(c => `
+    <div class="chat-list-item ${c.id === activeConversationId ? 'active' : ''}" onclick="openConversation('${c.id}')">
+      <div class="item-top">
+        <div>
+          <strong>${esc(c.otherProfileName || c.otherUserName)}</strong>
+          <div class="small muted">${esc(c.otherProfileType || 'usuario')} ${c.otherProfileCity ? '· ' + esc(c.otherProfileCity) : ''}</div>
+        </div>
+        ${c.unreadCount ? `<span class="unread-dot">${c.unreadCount}</span>` : ''}
+      </div>
+      <div class="small muted" style="margin-top:8px">${esc((c.lastMessage || 'Sin mensajes todavía').slice(0, 80))}</div>
+    </div>
+  `).join('');
+}
+
+function clearConversationPanel() {
+  document.getElementById('chatHeader').className = 'empty';
+  document.getElementById('chatHeader').innerHTML = 'Elegí una conversación o iniciá una desde un perfil.';
+  document.getElementById('chatMessages').classList.add('hidden');
+  document.getElementById('chatMessages').innerHTML = '';
+  document.getElementById('chatComposer').classList.add('hidden');
+  document.getElementById('messageInput').value = '';
+}
+
+async function startConversation(profileId) {
+  if (!token) return alert('Primero iniciá sesión.');
+  try {
+    const data = await api('/api/conversations/start', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ profileId })
+    });
+    activateTab('mensajes');
+    await loadConversations(data.conversationId);
+  } catch (e) { alert(e.message); }
+}
+
+async function openConversation(conversationId, reloadList = true) {
+  activeConversationId = conversationId;
+  renderConversations();
+  try {
+    const current = conversationsCache.find(c => c.id === conversationId);
+    if (current) {
+      document.getElementById('chatHeader').className = '';
+      document.getElementById('chatHeader').innerHTML = `
+        <div class="section-title">
+          <div>
+            <h3 style="margin:0">${esc(current.otherProfileName || current.otherUserName)}</h3>
+            <div class="small muted">${esc(current.otherProfileType || 'usuario')} ${current.otherProfileIndustry ? '· ' + esc(current.otherProfileIndustry) : ''} ${current.otherProfileCity ? '· ' + esc(current.otherProfileCity) : ''}</div>
+          </div>
+          <div class="row">
+            ${current.otherUserEmail ? `<a class="btn" href="mailto:${encodeURIComponent(current.otherUserEmail)}">Email</a>` : ''}
+          </div>
+        </div>`;
+    }
+    const data = await api('/api/conversations/' + conversationId + '/messages', { headers: authHeaders() });
+    messagesCache = data.messages || [];
+    renderMessages();
+    document.getElementById('chatMessages').classList.remove('hidden');
+    document.getElementById('chatComposer').classList.remove('hidden');
+    if (reloadList) await loadConversations(conversationId);
+  } catch (e) { console.error(e); }
+}
+
+function renderMessages() {
+  const box = document.getElementById('chatMessages');
+  if (!box) return;
+  if (!messagesCache.length) {
+    box.innerHTML = `<div class="small muted">Todavía no hay mensajes. Escribí el primero.</div>`;
+    return;
+  }
+  box.innerHTML = messagesCache.map(m => `
+    <div class="bubble ${m.senderUserId === currentUser?.id ? 'me' : 'other'}">
+      <div class="small muted">${esc(m.senderName)} · ${new Date(m.createdAt).toLocaleString('es-AR')}</div>
+      <div style="margin-top:6px;white-space:pre-wrap">${esc(m.body)}</div>
+    </div>
+  `).join('');
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendMessage() {
+  const body = document.getElementById('messageInput').value.trim();
+  if (!activeConversationId) return alert('Primero elegí una conversación.');
+  if (!body) return;
+  try {
+    await api('/api/conversations/' + activeConversationId + '/messages', {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify({ body })
+    });
+    document.getElementById('messageInput').value = '';
+    await openConversation(activeConversationId, false);
+    await loadConversations(activeConversationId);
+  } catch (e) { alert(e.message); }
+}
+
+function activateTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+  if (tab === 'admin' && currentUser?.role === 'admin') loadAdmin();
+  if (tab === 'mensajes' && token) loadConversations(activeConversationId);
+}
+
+async function loadAdmin() {
+  try {
+    const stats = await api("/api/admin/stats", { headers: authHeaders() });
+    document.getElementById("adminStats").innerHTML = [
+      metricCard(stats.stats.users, "Usuarios"),
+      metricCard(stats.stats.profiles, "Perfiles"),
+      metricCard(stats.stats.premium, "Premium"),
+      metricCard(stats.stats.verified, "Verificados"),
+      metricCard(stats.stats.reviews, "Reseñas"),
+      metricCard(stats.stats.reports, "Denuncias"),
+      metricCard(stats.stats.payments, "Pagos")
+    ].join("");
+
+    const users = await api("/api/admin/users", { headers: authHeaders() });
+    document.getElementById("adminUsers").innerHTML = users.users.map(u => `
+      <div class="review">
+        <strong>${esc(u.name)}</strong>
+        <div>${esc(u.email)} · ${esc(u.role)}</div>
+        <div class="small muted">${esc(u.profileName || "Sin perfil")} ${u.plan ? "· " + esc(u.plan) : ""} ${u.verified ? "· " + esc(u.verified) : ""}</div>
+        ${u.role !== "admin" ? `<button class="btn btn-danger" onclick="deleteUser('${u.id}')">Borrar usuario</button>` : ``}
+      </div>
+    `).join("") || `<div class="small muted">No hay usuarios.</div>`;
+
+    const profiles = await api("/api/admin/profiles", { headers: authHeaders() });
+    document.getElementById("adminProfiles").innerHTML = profiles.profiles.map(p => `
+      <div class="review">
+        <strong>${esc(p.name)}</strong>
+        <div>${esc(p.type)} · ${esc(p.plan)} · ${esc(p.verified)}</div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" onclick="setVerified('${p.id}','si')">Verificar</button>
+          <button class="btn" onclick="setVerified('${p.id}','no')">Quitar verificación</button>
+          <button class="btn btn-violet" onclick="setPlan('${p.id}','premium')">Premium</button>
+          <button class="btn" onclick="setPlan('${p.id}','free')">Free</button>
+        </div>
+      </div>
+    `).join("") || `<div class="small muted">No hay perfiles.</div>`;
+
+    const reviews = await api("/api/admin/reviews", { headers: authHeaders() });
+    document.getElementById("adminReviews").innerHTML = reviews.reviews.map(r => `
+      <div class="review">
+        <strong>${esc(r.profileName)}</strong>
+        <div>Autor: ${esc(r.authorName)} · ${stars(r.score)}</div>
+        <div>${esc(r.comment)}</div>
+        <button class="btn btn-danger" onclick="deleteReview('${r.id}')">Borrar reseña</button>
+      </div>
+    `).join("") || `<div class="small muted">No hay reseñas.</div>`;
+
+    const reports = await api("/api/admin/reports", { headers: authHeaders() });
+    document.getElementById("adminReports").innerHTML = reports.reports.map(r => `
+      <div class="review">
+        <strong>${esc(r.profileName)}</strong>
+        <div>Reportó: ${esc(r.reporterName)}</div>
+        <div>Motivo: ${esc(r.reason)}</div>
+        <div class="small muted">Estado: ${esc(r.status)}</div>
+        ${r.status !== "resuelta" ? `<button class="btn" onclick="resolveReport('${r.id}')">Marcar resuelta</button>` : ""}
+      </div>
+    `).join("") || `<div class="small muted">No hay denuncias.</div>`;
+
+    const payments = await api("/api/admin/payments", { headers: authHeaders() });
+    document.getElementById("adminPayments").innerHTML = payments.payments.map(p => `
+      <div class="review">
+        <strong>${esc(p.profileName)}</strong>
+        <div>${esc(p.userName)} · ${esc(p.userEmail)}</div>
+        <div>${esc(p.plan)} · ${formatMoney(p.amount, p.currency)} · ${esc(p.status)}</div>
+        <div class="small muted">Proveedor: ${esc(p.provider)} · ${new Date(p.createdAt).toLocaleString("es-AR")}</div>
+      </div>
+    `).join("") || `<div class="small muted">No hay pagos todavía.</div>`;
+  } catch (e) { console.error(e); }
+}
+
+async function setVerified(profileId, verified) {
+  try {
+    await api("/api/admin/profiles/" + profileId, {
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify({ verified })
+    });
+    await loadProfiles();
+    await loadAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+async function setPlan(profileId, plan) {
+  try {
+    await api("/api/admin/profiles/" + profileId, {
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify({ plan })
+    });
+    await loadProfiles();
+    await loadAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+async function deleteReview(id) {
+  if (!confirm("¿Borrar esta reseña?")) return;
+  try {
+    await api("/api/admin/reviews/" + id, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    await loadProfiles();
+    await loadAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+async function resolveReport(id) {
+  try {
+    await api("/api/admin/reports/" + id + "/resolve", {
+      method: "PATCH",
+      headers: authHeaders()
+    });
+    await loadAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+async function deleteUser(id) {
+  if (!confirm("¿Borrar este usuario y todo su contenido?")) return;
+  try {
+    await api("/api/admin/users/" + id, {
+      method: "DELETE",
+      headers: authHeaders()
+    });
+    await loadProfiles();
+    await loadAdmin();
+  } catch (e) { alert(e.message); }
+}
+
+function bindTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+  });
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey && document.activeElement === document.getElementById("messageInput")) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+bindTabs();
+if (token) loadMe();
+</script>
+</body>
+</html>

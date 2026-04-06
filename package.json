@@ -1,0 +1,19 @@
+{
+  "name": "red-vendedores-empresas-online-cobrable",
+  "version": "3.0.0",
+  "description": "App online para vendedores y empresas con PostgreSQL y Mercado Pago",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  }
+}
