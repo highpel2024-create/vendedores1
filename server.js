@@ -24,8 +24,7 @@ const pool = new Pool({
     : false
 });
 
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true, limit: "2mb" }));
+app.use(express.json({ limit: "8mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 function makeId() {
@@ -35,18 +34,6 @@ function makeId() {
 async function query(text, params = []) {
   const result = await pool.query(text, params);
   return result;
-}
-
-function safeJsonParse(value, fallback) {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-}
-
-function cleanText(value, max = 5000) {
-  return String(value || "").trim().slice(0, max);
 }
 
 async function initDb() {
@@ -75,16 +62,15 @@ async function initDb() {
       tags_json TEXT DEFAULT '[]',
       plan TEXT NOT NULL DEFAULT 'free',
       verified TEXT NOT NULL DEFAULT 'no',
+      photo_url TEXT DEFAULT '',
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `);
 
-await query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS website TEXT DEFAULT ''`);
-await query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT DEFAULT ''`);
-await query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS banner_url TEXT DEFAULT ''`);
-await query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS province TEXT DEFAULT ''`);
-await query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS company_name TEXT DEFAULT ''`);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '';
+  `);
 
   await query(`
     CREATE TABLE IF NOT EXISTS reviews (
@@ -183,18 +169,14 @@ function mapProfile(row) {
     type: row.type,
     name: row.name,
     city: row.city,
-    province: row.province || "",
     industry: row.industry,
-    companyName: row.company_name || "",
     description: row.description,
     phone: row.phone,
     email: row.email,
-    website: row.website || "",
-    avatarUrl: row.avatar_url || "",
-    bannerUrl: row.banner_url || "",
-    tags: safeJsonParse(row.tags_json || "[]", []),
+    tags: JSON.parse(row.tags_json || "[]"),
     plan: row.plan,
     verified: row.verified,
+    photoUrl: row.photo_url || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -347,9 +329,7 @@ app.post("/api/login", async (req, res) => {
     if (!ok) return res.status(400).json({ error: "Credenciales inválidas" });
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
-    const profileResult = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [user.id]);
-    const profile = profileResult.rows[0] ? mapProfile(profileResult.rows[0]) : null;
-    res.json({ ok: true, token, user: sanitizeUser(user), profile });
+    res.json({ ok: true, token, user: sanitizeUser(user) });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Error interno" });
@@ -369,60 +349,56 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
 
 app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
   try {
-    const { name, city, province, industry, companyName, description, phone, website, avatarUrl, bannerUrl, tags, plan } = req.body || {};
+    const { name, city, industry, description, phone, tags, plan, photoUrl } = req.body || {};
     if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
 
     const existing = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
     const normalizedPlan = plan === "premium" ? "premium" : "free";
-    const normalizedWebsite = cleanText(website, 250);
-    const normalizedAvatarUrl = cleanText(avatarUrl, 1000);
-    const normalizedBannerUrl = cleanText(bannerUrl, 1000);
-    const tagsJson = JSON.stringify(Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean).slice(0, 20) : []);
+    const tagsJson = JSON.stringify(Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : []);
+    const normalizedPhotoUrl = String(photoUrl || "").trim();
+    if (normalizedPhotoUrl && !normalizedPhotoUrl.startsWith("data:image/")) {
+      return res.status(400).json({ error: "La foto debe ser una imagen válida" });
+    }
+    if (normalizedPhotoUrl.length > 7_000_000) {
+      return res.status(400).json({ error: "La foto es demasiado pesada" });
+    }
 
     if (!existing.rows.length) {
       const profileId = makeId();
       await query(
         `INSERT INTO profiles
-         (id, user_id, type, name, city, province, industry, company_name, description, phone, email, website, avatar_url, banner_url, tags_json, plan, verified)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+         (id, user_id, type, name, city, industry, description, phone, email, tags_json, plan, verified, photo_url)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
         [
           profileId,
           req.user.id,
           req.user.role,
           String(name).trim(),
-          cleanText(city, 120),
-          cleanText(province, 120),
-          cleanText(industry, 120),
-          cleanText(companyName, 160),
-          cleanText(description, 3000),
-          cleanText(phone, 80),
+          String(city || "").trim(),
+          String(industry || "").trim(),
+          String(description || "").trim(),
+          String(phone || "").trim(),
           req.user.email,
-          normalizedWebsite,
-          normalizedAvatarUrl,
-          normalizedBannerUrl,
           tagsJson,
           normalizedPlan,
-          "no"
+          "no",
+          normalizedPhotoUrl
         ]
       );
     } else {
       await query(
         `UPDATE profiles
-         SET name=$1, city=$2, province=$3, industry=$4, company_name=$5, description=$6, phone=$7, website=$8, avatar_url=$9, banner_url=$10, tags_json=$11, plan=$12, updated_at=NOW()
-         WHERE user_id=$13`,
+         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, tags_json=$6, plan=$7, photo_url=$8, updated_at=NOW()
+         WHERE user_id=$9`,
         [
-          cleanText(name, 160),
-          cleanText(city, 120),
-          cleanText(province, 120),
-          cleanText(industry, 120),
-          cleanText(companyName, 160),
-          cleanText(description, 3000),
-          cleanText(phone, 80),
-          normalizedWebsite,
-          normalizedAvatarUrl,
-          normalizedBannerUrl,
+          String(name).trim(),
+          String(city || "").trim(),
+          String(industry || "").trim(),
+          String(description || "").trim(),
+          String(phone || "").trim(),
           tagsJson,
           normalizedPlan,
+          normalizedPhotoUrl,
           req.user.id
         ]
       );
@@ -430,71 +406,6 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
 
     const profileResult = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
     res.json({ ok: true, profile: mapProfile(profileResult.rows[0]) });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error interno" });
-  }
-});
-
-
-app.get("/api/profiles/:id", async (req, res) => {
-  try {
-    const result = await query(`
-      SELECT p.*, u.name AS owner_name
-      FROM profiles p
-      LEFT JOIN users u ON u.id = p.user_id
-      WHERE p.id = $1
-      LIMIT 1
-    `, [req.params.id]);
-
-    if (!result.rows.length) return res.status(404).json({ error: "Perfil no encontrado" });
-
-    const stats = await profileStats(req.params.id);
-    res.json({
-      ok: true,
-      profile: {
-        ...mapProfile(result.rows[0]),
-        ownerName: result.rows[0].owner_name || "Usuario",
-        stats
-      }
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error interno" });
-  }
-});
-
-app.patch("/api/profiles/me", authRequired, loadUser, async (req, res) => {
-  try {
-    const current = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
-    if (!current.rows.length) {
-      return res.status(400).json({ error: "Primero creá tu perfil" });
-    }
-
-    const row = current.rows[0];
-    const tagsJson = JSON.stringify(Array.isArray(req.body?.tags) ? req.body.tags.map(t => String(t).trim()).filter(Boolean).slice(0, 20) : safeJsonParse(row.tags_json || "[]", []));
-    await query(
-      `UPDATE profiles
-       SET name=$1, city=$2, province=$3, industry=$4, company_name=$5, description=$6, phone=$7, website=$8, avatar_url=$9, banner_url=$10, tags_json=$11, updated_at=NOW()
-       WHERE user_id=$12`,
-      [
-        cleanText(req.body?.name ?? row.name, 160),
-        cleanText(req.body?.city ?? row.city, 120),
-        cleanText(req.body?.province ?? row.province, 120),
-        cleanText(req.body?.industry ?? row.industry, 120),
-        cleanText(req.body?.companyName ?? row.company_name, 160),
-        cleanText(req.body?.description ?? row.description, 3000),
-        cleanText(req.body?.phone ?? row.phone, 80),
-        cleanText(req.body?.website ?? row.website, 250),
-        cleanText(req.body?.avatarUrl ?? row.avatar_url, 1000),
-        cleanText(req.body?.bannerUrl ?? row.banner_url, 1000),
-        tagsJson,
-        req.user.id
-      ]
-    );
-
-    const updated = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
-    res.json({ ok: true, profile: mapProfile(updated.rows[0]) });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Error interno" });
@@ -1165,19 +1076,6 @@ app.delete("/api/admin/users/:id", authRequired, loadUser, adminRequired, async 
     console.error(e);
     res.status(500).json({ error: "Error interno" });
   }
-});
-
-app.use("/api", (req, res) => {
-  res.status(404).json({ error: "Ruta API no encontrada", path: req.originalUrl });
-});
-
-app.use((err, req, res, next) => {
-  console.error("Error no controlado:", err);
-  if (res.headersSent) return next(err);
-  if (req.originalUrl && req.originalUrl.startsWith("/api/")) {
-    return res.status(500).json({ error: "Error interno del servidor" });
-  }
-  return res.status(500).send("Error interno del servidor");
 });
 
 app.get("*", (req, res) => {
