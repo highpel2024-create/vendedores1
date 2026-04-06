@@ -37,11 +37,20 @@
     .bubble.me{margin-left:auto;background:rgba(34,197,94,.12)} .bubble.other{background:rgba(255,255,255,.05)}
     .unread-dot{display:inline-flex;min-width:22px;height:22px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:var(--accent);color:#052e16;font-size:12px;font-weight:bold}
     .chat-compose{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
+    .profile-cover-editor{margin-bottom:16px}
+    .profile-cover-preview,.profile-cover-card{width:100%;height:190px;border-radius:22px;object-fit:cover;border:1px solid rgba(255,255,255,.10);background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(56,189,248,.14),rgba(139,92,246,.14))}
+    .profile-cover-card{height:160px;border-radius:18px}
+    .profile-cover-placeholder{display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-weight:bold;letter-spacing:.4px}
+    .profile-cover-actions{display:grid;gap:10px;margin-top:12px}
     .profile-photo-wrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
     .profile-photo-preview,.avatar-circle{width:96px;height:96px;border-radius:22px;object-fit:cover;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)}
     .avatar-circle{display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:30px;color:#cbd5e1}
     .avatar-sm{width:62px;height:62px;border-radius:18px;font-size:22px}
     .profile-photo-actions{display:flex;flex-direction:column;gap:8px;min-width:240px}
+    .profile-card-cover-wrap{position:relative;margin:-18px -18px 12px -18px}
+    .profile-card-cover-wrap .profile-cover-card{border-bottom-left-radius:0;border-bottom-right-radius:0;border-left:none;border-right:none;border-top:none}
+    .profile-card-cover-wrap .avatar-floating{position:absolute;left:14px;bottom:-26px;box-shadow:0 8px 20px rgba(0,0,0,.28)}
+    .profile-card-header-with-cover{padding-top:22px}
     .help{font-size:12px;color:var(--muted)}
     @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}}
   </style>
@@ -120,6 +129,20 @@
     <section id="tab-miPerfil" class="tab-panel hidden">
       <div class="card">
         <h3>Mi perfil</h3>
+        <div class="profile-cover-editor">
+          <img id="profileCoverPreview" class="profile-cover-preview hidden" alt="Foto de portada">
+          <div id="profileCoverFallback" class="profile-cover-preview profile-cover-placeholder">SIN PORTADA</div>
+          <div class="profile-cover-actions">
+            <div>
+              <label>Foto de portada</label>
+              <input id="profileCoverInput" type="file" accept="image/*" onchange="handleCoverPhotoChange(event)">
+            </div>
+            <div class="help">La portada se ve arriba del perfil. Podés cargarla desde cualquier dispositivo y se ajusta sola.</div>
+            <div class="row">
+              <button class="btn" type="button" onclick="clearCoverPhoto()">Quitar portada</button>
+            </div>
+          </div>
+        </div>
         <div class="profile-photo-wrap">
           <img id="profilePhotoPreview" class="profile-photo-preview hidden" alt="Foto de perfil">
           <div id="profilePhotoFallback" class="avatar-circle">?</div>
@@ -248,6 +271,7 @@ let conversationsCache = [];
 let activeConversationId = "";
 let messagesCache = [];
 let pendingProfilePhoto = "";
+let pendingCoverPhoto = "";
 
 function authHeaders() {
   return token ? { "Authorization": "Bearer " + token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -288,6 +312,20 @@ function setProfilePhotoPreview(photoUrl, name) {
     img.removeAttribute("src");
     img.classList.add("hidden");
     fallback.textContent = getInitials(name);
+    fallback.classList.remove("hidden");
+  }
+}
+function setCoverPhotoPreview(photoUrl) {
+  const img = document.getElementById("profileCoverPreview");
+  const fallback = document.getElementById("profileCoverFallback");
+  if (!img || !fallback) return;
+  if (photoUrl) {
+    img.src = photoUrl;
+    img.classList.remove("hidden");
+    fallback.classList.add("hidden");
+  } else {
+    img.removeAttribute("src");
+    img.classList.add("hidden");
     fallback.classList.remove("hidden");
   }
 }
@@ -335,11 +373,28 @@ async function handleProfilePhotoChange(event) {
     event.target.value = "";
   }
 }
+async function handleCoverPhotoChange(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  try {
+    pendingCoverPhoto = await optimizeImage(file);
+    setCoverPhotoPreview(pendingCoverPhoto);
+  } catch (e) {
+    alert(e.message);
+    event.target.value = "";
+  }
+}
 function clearProfilePhoto() {
   pendingProfilePhoto = "";
   const input = document.getElementById("profilePhotoInput");
   if (input) input.value = "";
   setProfilePhotoPreview("", document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
+}
+function clearCoverPhoto() {
+  pendingCoverPhoto = "";
+  const input = document.getElementById("profileCoverInput");
+  if (input) input.value = "";
+  setCoverPhotoPreview("");
 }
 function showGuest(){ document.getElementById("guestView").classList.remove("hidden"); document.getElementById("appView").classList.add("hidden"); }
 function showApp(){ document.getElementById("guestView").classList.add("hidden"); document.getElementById("appView").classList.remove("hidden"); }
@@ -422,9 +477,13 @@ function fillMyProfile() {
   document.getElementById("profileTags").value = (currentProfile?.tags || []).join(", ");
   document.getElementById("profileDescription").value = currentProfile?.description || "";
   pendingProfilePhoto = currentProfile?.photoUrl || "";
+  pendingCoverPhoto = currentProfile?.coverUrl || "";
   const input = document.getElementById("profilePhotoInput");
   if (input) input.value = "";
+  const coverInput = document.getElementById("profileCoverInput");
+  if (coverInput) coverInput.value = "";
   setProfilePhotoPreview(pendingProfilePhoto, currentProfile?.name || currentUser?.name || "?");
+  setCoverPhotoPreview(pendingCoverPhoto);
 }
 
 async function saveMyProfile() {
@@ -440,7 +499,8 @@ async function saveMyProfile() {
         plan: document.getElementById("profilePlan").value,
         tags: document.getElementById("profileTags").value.split(",").map(x => x.trim()).filter(Boolean),
         description: document.getElementById("profileDescription").value.trim(),
-        photoUrl: pendingProfilePhoto
+        photoUrl: pendingProfilePhoto,
+        coverUrl: pendingCoverPhoto
       })
     });
     currentProfile = data.profile;
@@ -515,10 +575,14 @@ function renderHome() {
 
   document.getElementById("latestProfiles").innerHTML = profilesCache.slice(0, 6).map(p => `
     <div class="item">
-      <div class="item-top">
-        <div>
-          <strong>${esc(p.name)}</strong>
-          <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")}</div>
+      ${p.coverUrl ? `<img src="${esc(p.coverUrl)}" alt="Portada de ${esc(p.name)}" class="profile-cover-card">` : `<div class="profile-cover-card profile-cover-placeholder">PORTADA</div>`}
+      <div class="item-top" style="margin-top:12px">
+        <div style="display:flex;gap:12px;align-items:center">
+          ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
+          <div>
+            <strong>${esc(p.name)}</strong>
+            <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")}</div>
+          </div>
         </div>
         <div class="row">
           <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
@@ -539,9 +603,13 @@ function renderProfiles() {
 
   box.innerHTML = profilesCache.map(p => `
     <div class="item">
-      <div class="item-top">
+      <div class="profile-card-cover-wrap">
+        ${p.coverUrl ? `<img src="${esc(p.coverUrl)}" alt="Portada de ${esc(p.name)}" class="profile-cover-card">` : `<div class="profile-cover-card profile-cover-placeholder">SIN PORTADA</div>`}
+        <div class="avatar-floating">${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}</div>
+      </div>
+      <div class="item-top profile-card-header-with-cover">
         <div style="display:flex;gap:12px;align-items:center">
-          ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
+          <div style="width:62px"></div>
           <div>
             <h3 style="margin:0 0 6px 0">${esc(p.name)}</h3>
             <div class="row">
@@ -645,8 +713,14 @@ function renderFavorites() {
   box.className = "";
   box.innerHTML = items.map(p => `
     <div class="review">
-      <strong>${esc(p.name)}</strong>
-      <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
+      ${p.coverUrl ? `<img src="${esc(p.coverUrl)}" alt="Portada de ${esc(p.name)}" class="profile-cover-card" style="height:120px;margin-bottom:10px">` : ``}
+      <div style="display:flex;gap:12px;align-items:center">
+        ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
+        <div>
+          <strong>${esc(p.name)}</strong>
+          <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
+        </div>
+      </div>
       <div style="margin-top:8px">${esc(p.description || "Sin descripción")}</div>
       <div class="row" style="margin-top:10px">
         ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
