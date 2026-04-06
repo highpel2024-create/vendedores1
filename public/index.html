@@ -37,25 +37,14 @@
     .bubble.me{margin-left:auto;background:rgba(34,197,94,.12)} .bubble.other{background:rgba(255,255,255,.05)}
     .unread-dot{display:inline-flex;min-width:22px;height:22px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:var(--accent);color:#052e16;font-size:12px;font-weight:bold}
     .chat-compose{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
-    .profile-cover{height:170px;border-radius:18px;background:linear-gradient(135deg,rgba(34,197,94,.22),rgba(56,189,248,.18),rgba(139,92,246,.2));border:1px solid rgba(255,255,255,.08);position:relative;overflow:hidden}
-    .profile-cover.has-image{background-size:cover;background-position:center}
-    .profile-avatar{width:88px;height:88px;border-radius:50%;object-fit:cover;border:4px solid rgba(15,23,42,.95);background:#0f172a;box-shadow:var(--shadow)}
-    .profile-avatar-fallback{width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:28px;border:4px solid rgba(15,23,42,.95);background:linear-gradient(135deg,rgba(56,189,248,.25),rgba(139,92,246,.28));color:#fff;box-shadow:var(--shadow)}
-    .profile-card-head{margin-top:-44px;padding:0 18px 18px 18px;position:relative}
-    .profile-summary{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:end}
-    .profile-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .mini-stat{padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}
-    .profile-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
-    .tags-wrap{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .link-chip{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;text-decoration:none;color:var(--text);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
-    .compact-cover{height:84px;border-radius:14px;background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(56,189,248,.14),rgba(139,92,246,.16));border:1px solid rgba(255,255,255,.08);overflow:hidden}
-    .compact-cover.has-image{background-size:cover;background-position:center}
-    .compact-profile-head{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;margin-top:-28px}
-    .compact-avatar,.compact-avatar-fallback{width:56px;height:56px;border-radius:50%;border:3px solid rgba(15,23,42,.95);background:#0f172a}
-    .compact-avatar{object-fit:cover}
-    .compact-avatar-fallback{display:flex;align-items:center;justify-content:center;font-weight:bold;background:linear-gradient(135deg,rgba(56,189,248,.25),rgba(139,92,246,.28))}
-    .muted-link{color:#93c5fd;text-decoration:none}
-    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose,.profile-grid{grid-template-columns:1fr}.profile-summary,.compact-profile-head{grid-template-columns:1fr}.profile-card-head{margin-top:12px;padding:0}}  </style>
+    .profile-photo-wrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
+    .profile-photo-preview,.avatar-circle{width:96px;height:96px;border-radius:22px;object-fit:cover;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)}
+    .avatar-circle{display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:30px;color:#cbd5e1}
+    .avatar-sm{width:62px;height:62px;border-radius:18px;font-size:22px}
+    .profile-photo-actions{display:flex;flex-direction:column;gap:8px;min-width:240px}
+    .help{font-size:12px;color:var(--muted)}
+    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}}
+  </style>
 </head>
 <body>
 <div class="container">
@@ -129,38 +118,37 @@
     </section>
 
     <section id="tab-miPerfil" class="tab-panel hidden">
-      <div class="grid profile-grid">
-        <div class="card">
-          <h3>Mi perfil</h3>
-          <div class="form-grid">
-            <div><label>Nombre visible</label><input id="profileName"></div>
-            <div><label>Empresa / marca</label><input id="profileCompanyName" placeholder="Nombre comercial"></div>
-            <div><label>Provincia</label><input id="profileProvince" placeholder="Buenos Aires"></div>
-            <div><label>Ciudad</label><input id="profileCity"></div>
-            <div><label>Rubro</label><input id="profileIndustry"></div>
-            <div><label>Teléfono</label><input id="profilePhone"></div>
-            <div><label>Sitio web</label><input id="profileWebsite" placeholder="https://tuweb.com"></div>
-            <div><label>Plan</label><select id="profilePlan"><option value="free">Free</option><option value="premium">Premium</option></select></div>
-            <div><label>Foto de perfil (URL)</label><input id="profileAvatarUrl" placeholder="https://..."></div>
-            <div><label>Portada / banner (URL)</label><input id="profileBannerUrl" placeholder="https://..."></div>
-            <div style="grid-column:1 / -1"><label>Etiquetas</label><input id="profileTags" placeholder="mayorista, retail, tecnología"></div>
-          </div>
-          <div style="height:10px"></div>
-          <div><label>Descripción</label><textarea id="profileDescription" placeholder="Contá qué ofrecés, experiencia, zona de trabajo y por qué elegirte."></textarea></div>
-          <div style="height:12px"></div>
-          <div class="row">
-            <button class="btn btn-primary" onclick="saveMyProfile()">Guardar perfil</button>
-            <button class="btn btn-violet" onclick="buyPremium()">Comprar Premium</button>
-            <button class="btn" onclick="mockUpgrade()">Premium demo</button>
+      <div class="card">
+        <h3>Mi perfil</h3>
+        <div class="profile-photo-wrap">
+          <img id="profilePhotoPreview" class="profile-photo-preview hidden" alt="Foto de perfil">
+          <div id="profilePhotoFallback" class="avatar-circle">?</div>
+          <div class="profile-photo-actions">
+            <div>
+              <label>Foto de perfil</label>
+              <input id="profilePhotoInput" type="file" accept="image/*" onchange="handleProfilePhotoChange(event)">
+            </div>
+            <div class="help">Podés subir una foto desde celular, PC o tablet. Se ajusta automáticamente para que pese menos.</div>
+            <div class="row">
+              <button class="btn" type="button" onclick="clearProfilePhoto()">Quitar foto</button>
+            </div>
           </div>
         </div>
-        <div class="card">
-          <div class="section-title">
-            <h3 style="margin:0">Vista previa</h3>
-            <span class="badge premium">perfil profesional</span>
-          </div>
-          <div style="height:12px"></div>
-          <div id="myProfilePreview"></div>
+        <div class="form-grid">
+          <div><label>Nombre</label><input id="profileName"></div>
+          <div><label>Ciudad</label><input id="profileCity"></div>
+          <div><label>Rubro</label><input id="profileIndustry"></div>
+          <div><label>Teléfono</label><input id="profilePhone"></div>
+          <div><label>Plan</label><select id="profilePlan"><option value="free">Free</option><option value="premium">Premium</option></select></div>
+          <div><label>Etiquetas</label><input id="profileTags" placeholder="mayorista, retail, tecnología"></div>
+        </div>
+        <div style="height:10px"></div>
+        <div><label>Descripción</label><textarea id="profileDescription"></textarea></div>
+        <div style="height:12px"></div>
+        <div class="row">
+          <button class="btn btn-primary" onclick="saveMyProfile()">Guardar perfil</button>
+          <button class="btn btn-violet" onclick="buyPremium()">Comprar Premium</button>
+          <button class="btn" onclick="mockUpgrade()">Premium demo</button>
         </div>
       </div>
     </section>
@@ -259,6 +247,7 @@ let favoriteIds = [];
 let conversationsCache = [];
 let activeConversationId = "";
 let messagesCache = [];
+let pendingProfilePhoto = "";
 
 function authHeaders() {
   return token ? { "Authorization": "Bearer " + token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -279,6 +268,78 @@ function formatMoney(amount, currency = "ARS") {
 }
 function normalizePhone(phone) {
   return String(phone || "").replace(/[^\d]/g, "");
+}
+function getInitials(name) {
+  return String(name || "?").trim().split(/\s+/).slice(0,2).map(x => x[0] || "").join("").toUpperCase() || "?";
+}
+function renderAvatar(photoUrl, name, extraClass = "") {
+  if (photoUrl) return `<img src="${esc(photoUrl)}" alt="${esc(name || "Perfil")}" class="profile-photo-preview ${extraClass}">`;
+  return `<div class="avatar-circle ${extraClass}">${esc(getInitials(name))}</div>`;
+}
+function setProfilePhotoPreview(photoUrl, name) {
+  const img = document.getElementById("profilePhotoPreview");
+  const fallback = document.getElementById("profilePhotoFallback");
+  if (!img || !fallback) return;
+  if (photoUrl) {
+    img.src = photoUrl;
+    img.classList.remove("hidden");
+    fallback.classList.add("hidden");
+  } else {
+    img.removeAttribute("src");
+    img.classList.add("hidden");
+    fallback.textContent = getInitials(name);
+    fallback.classList.remove("hidden");
+  }
+}
+async function optimizeImage(file) {
+  const allowed = ["image/jpeg", "image/png", "image/webp", "image/jpg", "image/gif"];
+  if (!allowed.includes(file.type)) throw new Error("Elegí una imagen JPG, PNG, WEBP o GIF");
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
+    reader.readAsDataURL(file);
+  });
+  const img = await new Promise((resolve, reject) => {
+    const i = new Image();
+    i.onload = () => resolve(i);
+    i.onerror = () => reject(new Error("No se pudo procesar la imagen"));
+    i.src = dataUrl;
+  });
+  const maxSide = 900;
+  let width = img.width;
+  let height = img.height;
+  if (width > maxSide || height > maxSide) {
+    const scale = Math.min(maxSide / width, maxSide / height);
+    width = Math.max(1, Math.round(width * scale));
+    height = Math.max(1, Math.round(height * scale));
+  }
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, width, height);
+  let out = canvas.toDataURL("image/jpeg", 0.82);
+  if (out.length > 1800000) out = canvas.toDataURL("image/jpeg", 0.72);
+  if (out.length > 2800000) throw new Error("La imagen sigue siendo muy pesada. Probá con una foto más liviana.");
+  return out;
+}
+async function handleProfilePhotoChange(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  try {
+    pendingProfilePhoto = await optimizeImage(file);
+    setProfilePhotoPreview(pendingProfilePhoto, document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
+  } catch (e) {
+    alert(e.message);
+    event.target.value = "";
+  }
+}
+function clearProfilePhoto() {
+  pendingProfilePhoto = "";
+  const input = document.getElementById("profilePhotoInput");
+  if (input) input.value = "";
+  setProfilePhotoPreview("", document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
 }
 function showGuest(){ document.getElementById("guestView").classList.remove("hidden"); document.getElementById("appView").classList.add("hidden"); }
 function showApp(){ document.getElementById("guestView").classList.add("hidden"); document.getElementById("appView").classList.remove("hidden"); }
@@ -354,18 +415,16 @@ async function loadMe() {
 
 function fillMyProfile() {
   document.getElementById("profileName").value = currentProfile?.name || "";
-  document.getElementById("profileCompanyName").value = currentProfile?.companyName || "";
-  document.getElementById("profileProvince").value = currentProfile?.province || "";
   document.getElementById("profileCity").value = currentProfile?.city || "";
   document.getElementById("profileIndustry").value = currentProfile?.industry || "";
   document.getElementById("profilePhone").value = currentProfile?.phone || "";
-  document.getElementById("profileWebsite").value = currentProfile?.website || "";
-  document.getElementById("profileAvatarUrl").value = currentProfile?.avatarUrl || "";
-  document.getElementById("profileBannerUrl").value = currentProfile?.bannerUrl || "";
   document.getElementById("profilePlan").value = currentProfile?.plan || "free";
   document.getElementById("profileTags").value = (currentProfile?.tags || []).join(", ");
   document.getElementById("profileDescription").value = currentProfile?.description || "";
-  renderMyProfilePreview();
+  pendingProfilePhoto = currentProfile?.photoUrl || "";
+  const input = document.getElementById("profilePhotoInput");
+  if (input) input.value = "";
+  setProfilePhotoPreview(pendingProfilePhoto, currentProfile?.name || currentUser?.name || "?");
 }
 
 async function saveMyProfile() {
@@ -375,17 +434,13 @@ async function saveMyProfile() {
       headers: authHeaders(),
       body: JSON.stringify({
         name: document.getElementById("profileName").value.trim(),
-        companyName: document.getElementById("profileCompanyName").value.trim(),
-        province: document.getElementById("profileProvince").value.trim(),
         city: document.getElementById("profileCity").value.trim(),
         industry: document.getElementById("profileIndustry").value.trim(),
         phone: document.getElementById("profilePhone").value.trim(),
-        website: document.getElementById("profileWebsite").value.trim(),
-        avatarUrl: document.getElementById("profileAvatarUrl").value.trim(),
-        bannerUrl: document.getElementById("profileBannerUrl").value.trim(),
         plan: document.getElementById("profilePlan").value,
         tags: document.getElementById("profileTags").value.split(",").map(x => x.trim()).filter(Boolean),
-        description: document.getElementById("profileDescription").value.trim()
+        description: document.getElementById("profileDescription").value.trim(),
+        photoUrl: pendingProfilePhoto
       })
     });
     currentProfile = data.profile;
@@ -440,111 +495,6 @@ async function loadProfiles() {
   } catch (e) { console.error(e); }
 }
 
-function safeUrl(url) {
-  const value = String(url || "").trim();
-  return /^https?:\/\//i.test(value) ? value : "";
-}
-function profileInitials(name) {
-  const clean = String(name || "").trim();
-  if (!clean) return "P";
-  return clean.split(/\s+/).slice(0, 2).map(x => x[0]?.toUpperCase() || "").join("") || "P";
-}
-function profileDisplayName(profile) {
-  return profile?.companyName || profile?.name || "Perfil";
-}
-function profileLocation(profile) {
-  return [profile?.city, profile?.province].filter(Boolean).join(", ");
-}
-function profileWebsiteLink(profile) {
-  const url = safeUrl(profile?.website);
-  return url ? `<a class="link-chip" href="${esc(url)}" target="_blank" rel="noopener noreferrer">Sitio web</a>` : "";
-}
-function renderTagBadges(tags = []) {
-  const arr = Array.isArray(tags) ? tags.filter(Boolean) : [];
-  return arr.length ? `<div class="tags-wrap">${arr.slice(0,6).map(tag => `<span class="pill">${esc(tag)}</span>`).join("")}</div>` : "";
-}
-function avatarMarkup(profile, compact = false) {
-  const avatar = safeUrl(profile?.avatarUrl);
-  const cls = compact ? "compact-avatar" : "profile-avatar";
-  const fallbackCls = compact ? "compact-avatar-fallback" : "profile-avatar-fallback";
-  return avatar
-    ? `<img class="${cls}" src="${esc(avatar)}" alt="${esc(profileDisplayName(profile))}">`
-    : `<div class="${fallbackCls}">${esc(profileInitials(profileDisplayName(profile)))}</div>`;
-}
-function coverMarkup(profile, compact = false) {
-  const banner = safeUrl(profile?.bannerUrl);
-  const cls = compact ? "compact-cover" : "profile-cover";
-  return `<div class="${cls}${banner ? " has-image" : ""}"${banner ? ` style="background-image:url('${esc(banner)}')"` : ""}></div>`;
-}
-function renderProfilePreviewCard(profile) {
-  if (!profile) {
-    return `<div class="empty">Completá los datos para ver la vista previa de tu perfil.</div>`;
-  }
-  const location = profileLocation(profile) || "Sin ubicación";
-  return `
-    <div>
-      ${coverMarkup(profile)}
-      <div class="profile-card-head">
-        <div class="profile-summary">
-          ${avatarMarkup(profile)}
-          <div>
-            <div class="row" style="justify-content:space-between;align-items:flex-start">
-              <div>
-                <h2 style="margin:0 0 4px 0">${esc(profileDisplayName(profile))}</h2>
-                <div class="small muted">${esc(profile.name || "")}${profile.companyName && profile.name && profile.companyName !== profile.name ? ` · ${esc(profile.name)}` : ""}</div>
-              </div>
-              <div class="row">
-                <span class="badge ${profile.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(profile.type || currentUser?.role || "perfil")}</span>
-                <span class="badge premium">${esc(profile.plan || "free")}</span>
-                ${profile.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
-              </div>
-            </div>
-            <div class="row" style="margin-top:8px">
-              <span class="pill">${esc(location)}</span>
-              <span class="pill">${esc(profile.industry || "Sin rubro")}</span>
-            </div>
-            ${renderTagBadges(profile.tags)}
-            <div class="profile-links">
-              ${profile.phone ? `<a class="link-chip" href="https://wa.me/${normalizePhone(profile.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
-              ${profile.email ? `<a class="link-chip" href="mailto:${encodeURIComponent(profile.email)}">Email</a>` : ""}
-              ${profileWebsiteLink(profile)}
-            </div>
-          </div>
-        </div>
-        <div style="height:14px"></div>
-        <div class="mini-stat">
-          <strong>Descripción</strong>
-          <div class="small muted" style="margin-top:6px">${esc(profile.description || "Todavía no agregaste descripción.")}</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-function readProfileForm() {
-  return {
-    id: currentProfile?.id || "",
-    type: currentProfile?.type || currentUser?.role || "vendedor",
-    name: document.getElementById("profileName")?.value.trim() || "",
-    companyName: document.getElementById("profileCompanyName")?.value.trim() || "",
-    province: document.getElementById("profileProvince")?.value.trim() || "",
-    city: document.getElementById("profileCity")?.value.trim() || "",
-    industry: document.getElementById("profileIndustry")?.value.trim() || "",
-    phone: document.getElementById("profilePhone")?.value.trim() || "",
-    email: currentProfile?.email || currentUser?.email || "",
-    website: document.getElementById("profileWebsite")?.value.trim() || "",
-    avatarUrl: document.getElementById("profileAvatarUrl")?.value.trim() || "",
-    bannerUrl: document.getElementById("profileBannerUrl")?.value.trim() || "",
-    plan: document.getElementById("profilePlan")?.value || "free",
-    verified: currentProfile?.verified || "no",
-    tags: (document.getElementById("profileTags")?.value || "").split(",").map(x => x.trim()).filter(Boolean),
-    description: document.getElementById("profileDescription")?.value.trim() || ""
-  };
-}
-function renderMyProfilePreview() {
-  const box = document.getElementById("myProfilePreview");
-  if (!box) return;
-  box.innerHTML = renderProfilePreviewCard(readProfileForm());
-}
 function metricCard(value, label) {
   return `<div class="card metric"><div class="value">${value}</div><div class="label">${label}</div></div>`;
 }
@@ -565,19 +515,15 @@ function renderHome() {
 
   document.getElementById("latestProfiles").innerHTML = profilesCache.slice(0, 6).map(p => `
     <div class="item">
-      ${coverMarkup(p, true)}
-      <div style="padding:0 2px 2px 2px">
-        <div class="compact-profile-head">
-          ${avatarMarkup(p, true)}
-          <div>
-            <strong>${esc(profileDisplayName(p))}</strong>
-            <div class="small muted">${esc(profileLocation(p) || "Sin ubicación")} · ${esc(p.industry || "Sin rubro")}</div>
-          </div>
-          <div class="row">
-            <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
-            <span class="badge premium">${esc(p.plan)}</span>
-            ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
-          </div>
+      <div class="item-top">
+        <div>
+          <strong>${esc(p.name)}</strong>
+          <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")}</div>
+        </div>
+        <div class="row">
+          <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
+          <span class="badge premium">${esc(p.plan)}</span>
+          ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
         </div>
       </div>
     </div>
@@ -593,33 +539,29 @@ function renderProfiles() {
 
   box.innerHTML = profilesCache.map(p => `
     <div class="item">
-      ${coverMarkup(p, true)}
-      <div style="padding:0 2px 2px 2px">
-        <div class="compact-profile-head">
-          ${avatarMarkup(p, true)}
+      <div class="item-top">
+        <div style="display:flex;gap:12px;align-items:center">
+          ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
           <div>
-            <h3 style="margin:0 0 6px 0">${esc(profileDisplayName(p))}</h3>
-            <div class="small muted">${esc(p.name || "")}${p.companyName && p.name && p.companyName !== p.name ? ` · ${esc(p.name)}` : ""}</div>
-            <div class="row" style="margin-top:6px">
-              <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
-              <span class="badge premium">${esc(p.plan)}</span>
-              ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
-              <span class="pill">${esc(profileLocation(p) || "Sin ubicación")}</span>
-              <span class="pill">${esc(p.industry || "Sin rubro")}</span>
+            <h3 style="margin:0 0 6px 0">${esc(p.name)}</h3>
+            <div class="row">
+            <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
+            <span class="badge premium">${esc(p.plan)}</span>
+            ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
+            <span class="pill">${esc(p.city || "Sin ciudad")}</span>
+            <span class="pill">${esc(p.industry || "Sin rubro")}</span>
             </div>
           </div>
-          <div>${stars(p.stats.avg)} <span class="small muted">${p.stats.avg ? p.stats.avg.toFixed(1) : "Sin notas"} · ${p.stats.count}</span></div>
         </div>
+        <div>${stars(p.stats.avg)} <span class="small muted">${p.stats.avg ? p.stats.avg.toFixed(1) : "Sin notas"} · ${p.stats.count}</span></div>
       </div>
       <div style="height:8px"></div>
       <div>${esc(p.description || "Sin descripción")}</div>
-      ${renderTagBadges(p.tags)}
       <div style="height:8px"></div>
-      <div class="small muted">Contacto: ${esc(p.email || "")} ${p.phone ? `· ${esc(p.phone)}` : ""} ${p.website ? `· ${esc(p.website)}` : ""}</div>
+      <div class="small muted">Contacto: ${esc(p.email || "")} ${p.phone ? `· ${esc(p.phone)}` : ""}</div>
       <div class="row" style="margin-top:10px">
         ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
         ${p.email ? `<a class="btn" href="mailto:${encodeURIComponent(p.email)}">Email</a>` : ""}
-        ${safeUrl(p.website) ? `<a class="btn" href="${esc(safeUrl(p.website))}" target="_blank" rel="noopener noreferrer">Web</a>` : ""}
         ${token && currentProfile && currentProfile.id !== p.id ? `<button class="btn btn-violet" onclick="startConversation('${p.id}')">Chatear</button>` : ""}
         ${token && currentProfile && currentProfile.id !== p.id ? `<button class="btn btn-secondary" onclick="reviewProfile('${p.id}')">Calificar</button>` : ""}
         ${token && currentProfile && currentProfile.id !== p.id ? `<button class="btn ${p.isFavorite ? 'active-filter' : ''}" onclick="toggleFavorite('${p.id}')"><span class="heart">${p.isFavorite ? '♥' : '♡'}</span> Guardar</button>` : ""}
@@ -1004,15 +946,7 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
-document.addEventListener("input", (e) => {
-  if ((e.target?.id || "").startsWith("profile")) renderMyProfilePreview();
-});
-document.addEventListener("change", (e) => {
-  if ((e.target?.id || "").startsWith("profile")) renderMyProfilePreview();
-});
-
 bindTabs();
-renderMyProfilePreview();
 if (token) loadMe();
 </script>
 </body>
