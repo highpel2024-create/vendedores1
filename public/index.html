@@ -52,6 +52,25 @@
     .profile-card-cover-wrap .avatar-floating{position:absolute;left:14px;bottom:-26px;box-shadow:0 8px 20px rgba(0,0,0,.28)}
     .profile-card-header-with-cover{padding-top:22px}
     .help{font-size:12px;color:var(--muted)}
+
+    .image-editor-modal{position:fixed;inset:0;background:rgba(2,6,23,.82);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}
+    .image-editor-box{width:min(960px,100%);max-height:92vh;overflow:auto;background:#0b1220;border:1px solid rgba(255,255,255,.10);border-radius:24px;box-shadow:var(--shadow);padding:18px}
+    .image-editor-stage{position:relative;width:100%;height:min(58vh,520px);border-radius:20px;border:1px solid rgba(255,255,255,.10);overflow:hidden;background:
+      linear-gradient(45deg,rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%),
+      linear-gradient(45deg,rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%);
+      background-size:24px 24px;background-position:0 0,12px 12px}
+    .image-editor-stage img{position:absolute;left:0;top:0;transform-origin:top left;user-select:none;-webkit-user-drag:none;touch-action:none;cursor:grab}
+    .image-editor-stage.dragging img{cursor:grabbing}
+    .crop-frame{position:absolute;inset:0;border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 9999px rgba(2,6,23,.55) inset;pointer-events:none}
+    .crop-frame.circle{border-radius:28px}
+    .crop-frame::after{content:'';position:absolute;inset:0;background:
+      linear-gradient(to right, transparent 33.33%, rgba(255,255,255,.28) 33.33%, rgba(255,255,255,.28) 34%, transparent 34%, transparent 66.66%, rgba(255,255,255,.28) 66.66%, rgba(255,255,255,.28) 67%, transparent 67%),
+      linear-gradient(to bottom, transparent 33.33%, rgba(255,255,255,.28) 33.33%, rgba(255,255,255,.28) 34%, transparent 34%, transparent 66.66%, rgba(255,255,255,.28) 66.66%, rgba(255,255,255,.28) 67%, transparent 67%)}
+    .image-editor-preview{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+    .preview-card{padding:12px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
+    .preview-canvas-wrap{border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
+    .editor-controls{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:end;margin-top:14px}
+    .editor-slider{width:100%}
     @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}}
   </style>
 </head>
@@ -137,7 +156,7 @@
               <label>Foto de portada</label>
               <input id="profileCoverInput" type="file" accept="image/*" onchange="handleCoverPhotoChange(event)">
             </div>
-            <div class="help">La portada se ve arriba del perfil. Podés cargarla desde cualquier dispositivo y se ajusta sola.</div>
+            <div class="help">La portada se ve arriba del perfil. Podés cargarla desde cualquier dispositivo, moverla, hacer zoom y recortarla antes de guardar.</div>
             <div class="row">
               <button class="btn" type="button" onclick="clearCoverPhoto()">Quitar portada</button>
             </div>
@@ -151,7 +170,7 @@
               <label>Foto de perfil</label>
               <input id="profilePhotoInput" type="file" accept="image/*" onchange="handleProfilePhotoChange(event)">
             </div>
-            <div class="help">Podés subir una foto desde celular, PC o tablet. Se ajusta automáticamente para que pese menos.</div>
+            <div class="help">Podés subir una foto desde celular, PC o tablet, moverla, hacer zoom y recortarla antes de guardar.</div>
             <div class="row">
               <button class="btn" type="button" onclick="clearProfilePhoto()">Quitar foto</button>
             </div>
@@ -261,7 +280,44 @@
   </div>
 </div>
 
+
+<div id="imageEditorModal" class="image-editor-modal hidden">
+  <div class="image-editor-box">
+    <div class="section-title">
+      <div>
+        <h3 id="imageEditorTitle" style="margin:0">Editar imagen</h3>
+        <div class="small muted">Arrastrá la foto para moverla. Usá el zoom para agrandarla o achicarla hasta que encuadre bien.</div>
+      </div>
+      <button class="btn" type="button" onclick="closeImageEditor()">Cerrar</button>
+    </div>
+    <div style="height:12px"></div>
+    <div id="imageEditorStage" class="image-editor-stage">
+      <img id="imageEditorImg" alt="Editar imagen">
+      <div id="imageEditorFrame" class="crop-frame"></div>
+    </div>
+    <div class="editor-controls">
+      <div>
+        <label>Zoom</label>
+        <input id="imageEditorZoom" class="editor-slider" type="range" min="1" max="3" step="0.01" value="1" oninput="updateEditorZoom(this.value)">
+      </div>
+      <button class="btn" type="button" onclick="centerImageEditor()">Centrar</button>
+      <button class="btn" type="button" onclick="resetImageEditor()">Reiniciar</button>
+      <button class="btn btn-primary" type="button" onclick="applyImageEditor()">Usar recorte</button>
+    </div>
+    <div class="image-editor-preview">
+      <div class="preview-card">
+        <div class="small muted" style="margin-bottom:8px">Vista previa</div>
+        <div class="preview-canvas-wrap"><canvas id="imageEditorPreviewCanvas" style="display:block;width:100%;height:auto"></canvas></div>
+      </div>
+      <div class="preview-card">
+        <div class="small muted" style="margin-bottom:8px">Consejo</div>
+        <div class="small">Para portada conviene una imagen ancha. Para perfil conviene una foto centrada en la cara o logo.</div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
+
 let token = localStorage.getItem("rve_online_token") || "";
 let currentUser = null;
 let currentProfile = null;
@@ -329,61 +385,301 @@ function setCoverPhotoPreview(photoUrl) {
     fallback.classList.remove("hidden");
   }
 }
-async function optimizeImage(file) {
+
+const imageEditorState = {
+  target: null,
+  originalDataUrl: "",
+  img: null,
+  imgW: 0,
+  imgH: 0,
+  outputW: 0,
+  outputH: 0,
+  stageW: 0,
+  stageH: 0,
+  baseScale: 1,
+  zoom: 1,
+  x: 0,
+  y: 0,
+  dragging: false,
+  startX: 0,
+  startY: 0,
+  startImgX: 0,
+  startImgY: 0
+};
+
+async function fileToDataUrl(file) {
   const allowed = ["image/jpeg", "image/png", "image/webp", "image/jpg", "image/gif"];
   if (!allowed.includes(file.type)) throw new Error("Elegí una imagen JPG, PNG, WEBP o GIF");
-  const dataUrl = await new Promise((resolve, reject) => {
+  return await new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
     reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
     reader.readAsDataURL(file);
   });
-  const img = await new Promise((resolve, reject) => {
+}
+
+async function loadImageElement(dataUrl) {
+  return await new Promise((resolve, reject) => {
     const i = new Image();
     i.onload = () => resolve(i);
     i.onerror = () => reject(new Error("No se pudo procesar la imagen"));
     i.src = dataUrl;
   });
-  const maxSide = 900;
-  let width = img.width;
-  let height = img.height;
-  if (width > maxSide || height > maxSide) {
-    const scale = Math.min(maxSide / width, maxSide / height);
-    width = Math.max(1, Math.round(width * scale));
-    height = Math.max(1, Math.round(height * scale));
+}
+
+function getEditorElements() {
+  return {
+    modal: document.getElementById("imageEditorModal"),
+    stage: document.getElementById("imageEditorStage"),
+    img: document.getElementById("imageEditorImg"),
+    frame: document.getElementById("imageEditorFrame"),
+    zoom: document.getElementById("imageEditorZoom"),
+    title: document.getElementById("imageEditorTitle"),
+    previewCanvas: document.getElementById("imageEditorPreviewCanvas")
+  };
+}
+
+async function openImageEditor(dataUrl, target) {
+  const els = getEditorElements();
+  const img = await loadImageElement(dataUrl);
+  imageEditorState.target = target;
+  imageEditorState.originalDataUrl = dataUrl;
+  imageEditorState.img = img;
+  imageEditorState.imgW = img.width;
+  imageEditorState.imgH = img.height;
+  imageEditorState.outputW = target === "cover" ? 1400 : 700;
+  imageEditorState.outputH = target === "cover" ? 500 : 700;
+  els.title.textContent = target === "cover" ? "Editar foto de portada" : "Editar foto de perfil";
+  els.frame.classList.toggle("circle", target !== "cover");
+  els.modal.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    setupImageEditor();
+  });
+}
+
+function setupImageEditor() {
+  const els = getEditorElements();
+  const stageRect = els.stage.getBoundingClientRect();
+  imageEditorState.stageW = Math.max(260, Math.round(stageRect.width));
+  imageEditorState.stageH = Math.max(260, Math.round(stageRect.height));
+  const ratio = imageEditorState.outputW / imageEditorState.outputH;
+  let cropW = imageEditorState.stageW;
+  let cropH = cropW / ratio;
+  if (cropH > imageEditorState.stageH) {
+    cropH = imageEditorState.stageH;
+    cropW = cropH * ratio;
   }
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
+  els.frame.style.width = cropW + "px";
+  els.frame.style.height = cropH + "px";
+  els.frame.style.left = Math.round((imageEditorState.stageW - cropW) / 2) + "px";
+  els.frame.style.top = Math.round((imageEditorState.stageH - cropH) / 2) + "px";
+  els.img.src = imageEditorState.originalDataUrl;
+  const coverScale = Math.max(cropW / imageEditorState.imgW, cropH / imageEditorState.imgH);
+  imageEditorState.baseScale = coverScale;
+  imageEditorState.zoom = 1;
+  if (els.zoom) {
+    els.zoom.min = "1";
+    els.zoom.max = "3.2";
+    els.zoom.step = "0.01";
+    els.zoom.value = "1";
+  }
+  centerImageEditor();
+  bindImageEditorEvents();
+  renderImageEditor();
+}
+
+function bindImageEditorEvents() {
+  const els = getEditorElements();
+  if (els.stage.dataset.bound === "1") return;
+  const startDrag = (clientX, clientY) => {
+    imageEditorState.dragging = true;
+    imageEditorState.startX = clientX;
+    imageEditorState.startY = clientY;
+    imageEditorState.startImgX = imageEditorState.x;
+    imageEditorState.startImgY = imageEditorState.y;
+    els.stage.classList.add("dragging");
+  };
+  const moveDrag = (clientX, clientY) => {
+    if (!imageEditorState.dragging) return;
+    imageEditorState.x = imageEditorState.startImgX + (clientX - imageEditorState.startX);
+    imageEditorState.y = imageEditorState.startImgY + (clientY - imageEditorState.startY);
+    clampImageEditorPosition();
+    renderImageEditor();
+  };
+  const endDrag = () => {
+    imageEditorState.dragging = false;
+    els.stage.classList.remove("dragging");
+  };
+  els.stage.addEventListener("mousedown", e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
+  window.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
+  window.addEventListener("mouseup", endDrag);
+  els.stage.addEventListener("touchstart", e => {
+    if (!e.touches?.length) return;
+    const t = e.touches[0];
+    startDrag(t.clientX, t.clientY);
+  }, { passive: true });
+  window.addEventListener("touchmove", e => {
+    if (!imageEditorState.dragging || !e.touches?.length) return;
+    const t = e.touches[0];
+    moveDrag(t.clientX, t.clientY);
+  }, { passive: true });
+  window.addEventListener("touchend", endDrag);
+  window.addEventListener("resize", () => {
+    const modalVisible = !getEditorElements().modal.classList.contains("hidden");
+    if (modalVisible) setupImageEditor();
+  });
+  els.stage.dataset.bound = "1";
+}
+
+function currentImageScale() {
+  return imageEditorState.baseScale * imageEditorState.zoom;
+}
+
+function centerImageEditor() {
+  const els = getEditorElements();
+  const frameRect = els.frame.getBoundingClientRect();
+  const stageRect = els.stage.getBoundingClientRect();
+  const frameX = frameRect.left - stageRect.left;
+  const frameY = frameRect.top - stageRect.top;
+  const frameW = frameRect.width;
+  const frameH = frameRect.height;
+  const scale = currentImageScale();
+  imageEditorState.x = frameX + (frameW - imageEditorState.imgW * scale) / 2;
+  imageEditorState.y = frameY + (frameH - imageEditorState.imgH * scale) / 2;
+  clampImageEditorPosition();
+  renderImageEditor();
+}
+
+function resetImageEditor() {
+  const els = getEditorElements();
+  imageEditorState.zoom = 1;
+  if (els.zoom) els.zoom.value = "1";
+  centerImageEditor();
+}
+
+function updateEditorZoom(value) {
+  const prevScale = currentImageScale();
+  imageEditorState.zoom = Number(value || 1);
+  const nextScale = currentImageScale();
+  const els = getEditorElements();
+  const frameRect = els.frame.getBoundingClientRect();
+  const stageRect = els.stage.getBoundingClientRect();
+  const centerX = (frameRect.left - stageRect.left) + frameRect.width / 2;
+  const centerY = (frameRect.top - stageRect.top) + frameRect.height / 2;
+  imageEditorState.x = centerX - ((centerX - imageEditorState.x) * (nextScale / prevScale));
+  imageEditorState.y = centerY - ((centerY - imageEditorState.y) * (nextScale / prevScale));
+  clampImageEditorPosition();
+  renderImageEditor();
+}
+
+function clampImageEditorPosition() {
+  const els = getEditorElements();
+  const stage = els.stage.getBoundingClientRect();
+  const frame = els.frame.getBoundingClientRect();
+  const frameX = frame.left - stage.left;
+  const frameY = frame.top - stage.top;
+  const frameW = frame.width;
+  const frameH = frame.height;
+  const scale = currentImageScale();
+  const imgW = imageEditorState.imgW * scale;
+  const imgH = imageEditorState.imgH * scale;
+  const minX = frameX + frameW - imgW;
+  const maxX = frameX;
+  const minY = frameY + frameH - imgH;
+  const maxY = frameY;
+  imageEditorState.x = Math.min(maxX, Math.max(minX, imageEditorState.x));
+  imageEditorState.y = Math.min(maxY, Math.max(minY, imageEditorState.y));
+}
+
+function renderImageEditor() {
+  const els = getEditorElements();
+  const scale = currentImageScale();
+  els.img.style.width = imageEditorState.imgW + "px";
+  els.img.style.height = imageEditorState.imgH + "px";
+  els.img.style.transform = `translate(${imageEditorState.x}px, ${imageEditorState.y}px) scale(${scale})`;
+  renderImageEditorPreview();
+}
+
+function renderImageEditorPreview() {
+  const els = getEditorElements();
+  const canvas = els.previewCanvas;
+  if (!canvas) return;
+  const outW = imageEditorState.outputW;
+  const outH = imageEditorState.outputH;
+  canvas.width = outW;
+  canvas.height = outH;
   const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0, width, height);
-  let out = canvas.toDataURL("image/jpeg", 0.82);
-  if (out.length > 1800000) out = canvas.toDataURL("image/jpeg", 0.72);
+  ctx.clearRect(0, 0, outW, outH);
+  const stage = els.stage.getBoundingClientRect();
+  const frame = els.frame.getBoundingClientRect();
+  const frameX = frame.left - stage.left;
+  const frameY = frame.top - stage.top;
+  const scale = currentImageScale();
+  const sx = (frameX - imageEditorState.x) / scale;
+  const sy = (frameY - imageEditorState.y) / scale;
+  const sw = frame.width / scale;
+  const sh = frame.height / scale;
+  ctx.drawImage(imageEditorState.img, sx, sy, sw, sh, 0, 0, outW, outH);
+}
+
+function exportEditedImage() {
+  const els = getEditorElements();
+  const canvas = els.previewCanvas;
+  let out = canvas.toDataURL("image/jpeg", 0.88);
+  if (out.length > 1800000) out = canvas.toDataURL("image/jpeg", 0.76);
   if (out.length > 2800000) throw new Error("La imagen sigue siendo muy pesada. Probá con una foto más liviana.");
   return out;
 }
+
+function applyImageEditor() {
+  try {
+    const out = exportEditedImage();
+    if (imageEditorState.target === "cover") {
+      pendingCoverPhoto = out;
+      setCoverPhotoPreview(out);
+      const input = document.getElementById("profileCoverInput");
+      if (input) input.value = "";
+    } else {
+      pendingProfilePhoto = out;
+      setProfilePhotoPreview(out, document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
+      const input = document.getElementById("profilePhotoInput");
+      if (input) input.value = "";
+    }
+    closeImageEditor();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+function closeImageEditor() {
+  const els = getEditorElements();
+  els.modal.classList.add("hidden");
+}
+
 async function handleProfilePhotoChange(event) {
   const file = event?.target?.files?.[0];
   if (!file) return;
   try {
-    pendingProfilePhoto = await optimizeImage(file);
-    setProfilePhotoPreview(pendingProfilePhoto, document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
+    const dataUrl = await fileToDataUrl(file);
+    await openImageEditor(dataUrl, "profile");
   } catch (e) {
     alert(e.message);
     event.target.value = "";
   }
 }
+
 async function handleCoverPhotoChange(event) {
   const file = event?.target?.files?.[0];
   if (!file) return;
   try {
-    pendingCoverPhoto = await optimizeImage(file);
-    setCoverPhotoPreview(pendingCoverPhoto);
+    const dataUrl = await fileToDataUrl(file);
+    await openImageEditor(dataUrl, "cover");
   } catch (e) {
     alert(e.message);
     event.target.value = "";
   }
 }
+
 function clearProfilePhoto() {
   pendingProfilePhoto = "";
   const input = document.getElementById("profilePhotoInput");
