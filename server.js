@@ -63,6 +63,7 @@ async function initDb() {
       plan TEXT NOT NULL DEFAULT 'free',
       verified TEXT NOT NULL DEFAULT 'no',
       photo_url TEXT DEFAULT '',
+      cover_url TEXT DEFAULT '',
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
@@ -70,6 +71,10 @@ async function initDb() {
 
   await query(`
     ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '';
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cover_url TEXT DEFAULT '';
   `);
 
   await query(`
@@ -177,6 +182,7 @@ function mapProfile(row) {
     plan: row.plan,
     verified: row.verified,
     photoUrl: row.photo_url || "",
+    coverUrl: row.cover_url || "",
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -349,26 +355,33 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
 
 app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
   try {
-    const { name, city, industry, description, phone, tags, plan, photoUrl } = req.body || {};
+    const { name, city, industry, description, phone, tags, plan, photoUrl, coverUrl } = req.body || {};
     if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
 
     const existing = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
     const normalizedPlan = plan === "premium" ? "premium" : "free";
     const tagsJson = JSON.stringify(Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : []);
     const normalizedPhotoUrl = String(photoUrl || "").trim();
+    const normalizedCoverUrl = String(coverUrl || "").trim();
     if (normalizedPhotoUrl && !normalizedPhotoUrl.startsWith("data:image/")) {
       return res.status(400).json({ error: "La foto debe ser una imagen válida" });
     }
+    if (normalizedCoverUrl && !normalizedCoverUrl.startsWith("data:image/")) {
+      return res.status(400).json({ error: "La portada debe ser una imagen válida" });
+    }
     if (normalizedPhotoUrl.length > 7_000_000) {
       return res.status(400).json({ error: "La foto es demasiado pesada" });
+    }
+    if (normalizedCoverUrl.length > 9_000_000) {
+      return res.status(400).json({ error: "La portada es demasiado pesada" });
     }
 
     if (!existing.rows.length) {
       const profileId = makeId();
       await query(
         `INSERT INTO profiles
-         (id, user_id, type, name, city, industry, description, phone, email, tags_json, plan, verified, photo_url)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+         (id, user_id, type, name, city, industry, description, phone, email, tags_json, plan, verified, photo_url, cover_url)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
         [
           profileId,
           req.user.id,
@@ -382,14 +395,15 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
           tagsJson,
           normalizedPlan,
           "no",
-          normalizedPhotoUrl
+          normalizedPhotoUrl,
+          normalizedCoverUrl
         ]
       );
     } else {
       await query(
         `UPDATE profiles
-         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, tags_json=$6, plan=$7, photo_url=$8, updated_at=NOW()
-         WHERE user_id=$9`,
+         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, tags_json=$6, plan=$7, photo_url=$8, cover_url=$9, updated_at=NOW()
+         WHERE user_id=$10`,
         [
           String(name).trim(),
           String(city || "").trim(),
@@ -399,6 +413,7 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
           tagsJson,
           normalizedPlan,
           normalizedPhotoUrl,
+          normalizedCoverUrl,
           req.user.id
         ]
       );
