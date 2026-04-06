@@ -71,7 +71,16 @@
     .preview-canvas-wrap{border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
     .editor-controls{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:end;margin-top:14px}
     .editor-slider{width:100%}
-    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}}
+    .gallery-upload-wrap{margin-top:16px;padding:16px;border:1px dashed rgba(255,255,255,.14);border-radius:18px;background:rgba(255,255,255,.03)}
+    .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+    .gallery-item{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:18px;overflow:hidden}
+    .gallery-item img{width:100%;height:180px;object-fit:cover;display:block;background:#0b1220}
+    .gallery-item-actions{display:flex;flex-wrap:wrap;gap:8px;padding:10px}
+    .gallery-item-actions .btn{padding:9px 10px;font-size:13px}
+    .gallery-empty{padding:16px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:var(--muted)}
+    .work-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+    .work-gallery img{width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#0b1220;display:block}
+    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose,.gallery-grid,.work-gallery{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
@@ -175,6 +184,19 @@
               <button class="btn" type="button" onclick="clearProfilePhoto()">Quitar foto</button>
             </div>
           </div>
+        </div>
+        <div class="gallery-upload-wrap">
+          <div class="section-title">
+            <h3 style="margin:0">Galería de trabajos o experiencia</h3>
+            <span class="small muted">Hasta 6 fotos</span>
+          </div>
+          <div class="help" style="margin-top:8px">Cada foto se puede mover, hacer zoom, recortar y centrar antes de guardarla.</div>
+          <div style="height:10px"></div>
+          <div class="row">
+            <input id="galleryPhotoInput" type="file" accept="image/*" onchange="handleGalleryPhotoChange(event)">
+            <button class="btn" type="button" onclick="clearGalleryPhotos()">Vaciar galería</button>
+          </div>
+          <div id="galleryList" class="gallery-empty">Todavía no cargaste fotos en la galería.</div>
         </div>
         <div class="form-grid">
           <div><label>Nombre</label><input id="profileName"></div>
@@ -328,6 +350,7 @@ let activeConversationId = "";
 let messagesCache = [];
 let pendingProfilePhoto = "";
 let pendingCoverPhoto = "";
+let pendingGalleryPhotos = [];
 
 function authHeaders() {
   return token ? { "Authorization": "Bearer " + token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -439,18 +462,35 @@ function getEditorElements() {
   };
 }
 
+function normalizeEditorTarget(target) {
+  if (typeof target === "string") {
+    if (target === "cover") return { kind: "cover", outputW: 1400, outputH: 500, title: "Editar foto de portada", circle: false };
+    if (target === "gallery") return { kind: "gallery", index: -1, outputW: 1200, outputH: 900, title: "Editar foto de galería", circle: false };
+    return { kind: "profile", outputW: 700, outputH: 700, title: "Editar foto de perfil", circle: true };
+  }
+  return {
+    kind: target?.kind || "profile",
+    index: Number.isInteger(target?.index) ? target.index : -1,
+    outputW: target?.outputW || 700,
+    outputH: target?.outputH || 700,
+    title: target?.title || "Editar imagen",
+    circle: Boolean(target?.circle)
+  };
+}
+
 async function openImageEditor(dataUrl, target) {
   const els = getEditorElements();
   const img = await loadImageElement(dataUrl);
-  imageEditorState.target = target;
+  const normalizedTarget = normalizeEditorTarget(target);
+  imageEditorState.target = normalizedTarget;
   imageEditorState.originalDataUrl = dataUrl;
   imageEditorState.img = img;
   imageEditorState.imgW = img.width;
   imageEditorState.imgH = img.height;
-  imageEditorState.outputW = target === "cover" ? 1400 : 700;
-  imageEditorState.outputH = target === "cover" ? 500 : 700;
-  els.title.textContent = target === "cover" ? "Editar foto de portada" : "Editar foto de perfil";
-  els.frame.classList.toggle("circle", target !== "cover");
+  imageEditorState.outputW = normalizedTarget.outputW;
+  imageEditorState.outputH = normalizedTarget.outputH;
+  els.title.textContent = normalizedTarget.title;
+  els.frame.classList.toggle("circle", normalizedTarget.circle);
   els.modal.classList.remove("hidden");
   requestAnimationFrame(() => {
     setupImageEditor();
@@ -634,11 +674,21 @@ function exportEditedImage() {
 function applyImageEditor() {
   try {
     const out = exportEditedImage();
-    if (imageEditorState.target === "cover") {
+    const target = imageEditorState.target || { kind: "profile" };
+    if (target.kind === "cover") {
       pendingCoverPhoto = out;
       setCoverPhotoPreview(out);
       const input = document.getElementById("profileCoverInput");
       if (input) input.value = "";
+    } else if (target.kind === "gallery") {
+      if (Number.isInteger(target.index) && target.index >= 0 && target.index < pendingGalleryPhotos.length) pendingGalleryPhotos[target.index] = out;
+      else {
+        if (pendingGalleryPhotos.length >= 6) throw new Error("La galería permite hasta 6 fotos");
+        pendingGalleryPhotos.push(out);
+      }
+      const input = document.getElementById("galleryPhotoInput");
+      if (input) input.value = "";
+      renderGalleryEditor();
     } else {
       pendingProfilePhoto = out;
       setProfilePhotoPreview(out, document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
@@ -677,6 +727,76 @@ async function handleCoverPhotoChange(event) {
   } catch (e) {
     alert(e.message);
     event.target.value = "";
+  }
+}
+
+async function handleGalleryPhotoChange(event) {
+  const file = event?.target?.files?.[0];
+  if (!file) return;
+  if (pendingGalleryPhotos.length >= 6) {
+    alert("La galería permite hasta 6 fotos.");
+    event.target.value = "";
+    return;
+  }
+  try {
+    const dataUrl = await fileToDataUrl(file);
+    await openImageEditor(dataUrl, { kind: "gallery", index: -1, outputW: 1200, outputH: 900, title: "Editar foto de galería", circle: false });
+  } catch (e) {
+    alert(e.message);
+    event.target.value = "";
+  }
+}
+
+function renderGalleryEditor() {
+  const box = document.getElementById("galleryList");
+  if (!box) return;
+  if (!pendingGalleryPhotos.length) {
+    box.className = "gallery-empty";
+    box.innerHTML = "Todavía no cargaste fotos en la galería.";
+    return;
+  }
+  box.className = "gallery-grid";
+  box.innerHTML = pendingGalleryPhotos.map((img, idx) => `
+    <div class="gallery-item">
+      <img src="${esc(img)}" alt="Trabajo ${idx + 1}">
+      <div class="gallery-item-actions">
+        <button class="btn" type="button" onclick="editGalleryPhoto(${idx})">Recortar / centrar</button>
+        <button class="btn" type="button" onclick="moveGalleryPhoto(${idx}, -1)">←</button>
+        <button class="btn" type="button" onclick="moveGalleryPhoto(${idx}, 1)">→</button>
+        <button class="btn btn-danger" type="button" onclick="removeGalleryPhoto(${idx})">Quitar</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function removeGalleryPhoto(index) {
+  pendingGalleryPhotos.splice(index, 1);
+  renderGalleryEditor();
+}
+
+function clearGalleryPhotos() {
+  pendingGalleryPhotos = [];
+  const input = document.getElementById("galleryPhotoInput");
+  if (input) input.value = "";
+  renderGalleryEditor();
+}
+
+function moveGalleryPhoto(index, direction) {
+  const next = index + direction;
+  if (next < 0 || next >= pendingGalleryPhotos.length) return;
+  const tmp = pendingGalleryPhotos[index];
+  pendingGalleryPhotos[index] = pendingGalleryPhotos[next];
+  pendingGalleryPhotos[next] = tmp;
+  renderGalleryEditor();
+}
+
+async function editGalleryPhoto(index) {
+  const current = pendingGalleryPhotos[index];
+  if (!current) return;
+  try {
+    await openImageEditor(current, { kind: "gallery", index, outputW: 1200, outputH: 900, title: "Reencuadrar foto de galería", circle: false });
+  } catch (e) {
+    alert(e.message);
   }
 }
 
@@ -774,12 +894,14 @@ function fillMyProfile() {
   document.getElementById("profileDescription").value = currentProfile?.description || "";
   pendingProfilePhoto = currentProfile?.photoUrl || "";
   pendingCoverPhoto = currentProfile?.coverUrl || "";
+  pendingGalleryPhotos = Array.isArray(currentProfile?.galleryUrls) ? [...currentProfile.galleryUrls] : [];
   const input = document.getElementById("profilePhotoInput");
   if (input) input.value = "";
   const coverInput = document.getElementById("profileCoverInput");
   if (coverInput) coverInput.value = "";
   setProfilePhotoPreview(pendingProfilePhoto, currentProfile?.name || currentUser?.name || "?");
   setCoverPhotoPreview(pendingCoverPhoto);
+  renderGalleryEditor();
 }
 
 async function saveMyProfile() {
@@ -796,7 +918,8 @@ async function saveMyProfile() {
         tags: document.getElementById("profileTags").value.split(",").map(x => x.trim()).filter(Boolean),
         description: document.getElementById("profileDescription").value.trim(),
         photoUrl: pendingProfilePhoto,
-        coverUrl: pendingCoverPhoto
+        coverUrl: pendingCoverPhoto,
+        galleryUrls: pendingGalleryPhotos
       })
     });
     currentProfile = data.profile;
@@ -872,6 +995,7 @@ function renderHome() {
   document.getElementById("latestProfiles").innerHTML = profilesCache.slice(0, 6).map(p => `
     <div class="item">
       ${p.coverUrl ? `<img src="${esc(p.coverUrl)}" alt="Portada de ${esc(p.name)}" class="profile-cover-card">` : `<div class="profile-cover-card profile-cover-placeholder">PORTADA</div>`}
+      ${(Array.isArray(p.galleryUrls) && p.galleryUrls.length) ? `<div class="work-gallery">${p.galleryUrls.slice(0,3).map(img => `<img src="${esc(img)}" alt="Trabajo de ${esc(p.name)}">`).join("")}</div>` : ``}
       <div class="item-top" style="margin-top:12px">
         <div style="display:flex;gap:12px;align-items:center">
           ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
@@ -921,6 +1045,7 @@ function renderProfiles() {
       </div>
       <div style="height:8px"></div>
       <div>${esc(p.description || "Sin descripción")}</div>
+      ${(Array.isArray(p.galleryUrls) && p.galleryUrls.length) ? `<div class="work-gallery">${p.galleryUrls.slice(0,6).map(img => `<img src="${esc(img)}" alt="Trabajo de ${esc(p.name)}">`).join("")}</div>` : ``}
       <div style="height:8px"></div>
       <div class="small muted">Contacto: ${esc(p.email || "")} ${p.phone ? `· ${esc(p.phone)}` : ""}</div>
       <div class="row" style="margin-top:10px">
@@ -1018,6 +1143,7 @@ function renderFavorites() {
         </div>
       </div>
       <div style="margin-top:8px">${esc(p.description || "Sin descripción")}</div>
+      ${(Array.isArray(p.galleryUrls) && p.galleryUrls.length) ? `<div class="work-gallery">${p.galleryUrls.slice(0,3).map(img => `<img src="${esc(img)}" alt="Trabajo de ${esc(p.name)}">`).join("")}</div>` : ``}
       <div class="row" style="margin-top:10px">
         ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
         ${p.email ? `<a class="btn" href="mailto:${encodeURIComponent(p.email)}">Email</a>` : ""}
