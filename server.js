@@ -200,6 +200,14 @@ async function initDb() {
     );
   `);
 
+
+  await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT ''`);
+  await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT ''`);
+  await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS message TEXT NOT NULL DEFAULT ''`);
+  await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS link TEXT NOT NULL DEFAULT ''`);
+  await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS data_json TEXT NOT NULL DEFAULT '{}'`);
+  await query(`ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read TEXT NOT NULL DEFAULT 'no'`);
+
   const adminEmail = "admin@demo.com";
   const existing = await query(`SELECT id FROM users WHERE email = $1 LIMIT 1`, [adminEmail]);
   if (!existing.rows.length) {
@@ -330,12 +338,18 @@ async function conversationAllowed(userId, conversationId) {
 }
 
 async function addNotification(userId, type, title, message, link = '', data = {}) {
-  if (!userId) return;
-  await query(
-    `INSERT INTO notifications (id, user_id, type, title, message, link, data_json, is_read)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-    [makeId(), userId, String(type || ''), String(title || ''), String(message || ''), String(link || ''), JSON.stringify(data || {}), 'no']
-  );
+  if (!userId) return { ok: false, skipped: true };
+  try {
+    await query(
+      `INSERT INTO notifications (id, user_id, type, title, message, link, data_json, is_read)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [makeId(), userId, String(type || ''), String(title || ''), String(message || ''), String(link || ''), JSON.stringify(data || {}), 'no']
+    );
+    return { ok: true };
+  } catch (e) {
+    console.error('No se pudo guardar la notificación:', e);
+    return { ok: false, error: String(e && e.message ? e.message : e) };
+  }
 }
 
 app.get("/api/health", async (req, res) => {
@@ -1004,7 +1018,7 @@ app.post("/api/conversations/:id/messages", authRequired, loadUser, async (req, 
     await query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [req.params.id]);
 
     const receiverUserId = conversation.user_a_id === req.user.id ? conversation.user_b_id : conversation.user_a_id;
-    await addNotification(
+    const notificationResult = await addNotification(
       receiverUserId,
       'message',
       'Nuevo mensaje',
@@ -1013,7 +1027,7 @@ app.post("/api/conversations/:id/messages", authRequired, loadUser, async (req, 
       { conversationId: req.params.id }
     );
 
-    res.json({ ok: true });
+    res.json({ ok: true, notificationOk: Boolean(notificationResult && notificationResult.ok) });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'Error interno' });
