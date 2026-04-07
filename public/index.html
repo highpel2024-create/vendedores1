@@ -37,50 +37,12 @@
     .bubble.me{margin-left:auto;background:rgba(34,197,94,.12)} .bubble.other{background:rgba(255,255,255,.05)}
     .unread-dot{display:inline-flex;min-width:22px;height:22px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:var(--accent);color:#052e16;font-size:12px;font-weight:bold}
     .chat-compose{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
-    .profile-cover-editor{margin-bottom:16px}
-    .profile-cover-preview,.profile-cover-card{width:100%;height:190px;border-radius:22px;object-fit:cover;border:1px solid rgba(255,255,255,.10);background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(56,189,248,.14),rgba(139,92,246,.14))}
-    .profile-cover-card{height:160px;border-radius:18px}
-    .profile-cover-placeholder{display:flex;align-items:center;justify-content:center;color:#cbd5e1;font-weight:bold;letter-spacing:.4px}
-    .profile-cover-actions{display:grid;gap:10px;margin-top:12px}
-    .profile-photo-wrap{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;margin-bottom:14px}
-    .profile-photo-preview,.avatar-circle{width:96px;height:96px;border-radius:22px;object-fit:cover;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04)}
-    .avatar-circle{display:inline-flex;align-items:center;justify-content:center;font-weight:bold;font-size:30px;color:#cbd5e1}
-    .avatar-sm{width:62px;height:62px;border-radius:18px;font-size:22px}
-    .profile-photo-actions{display:flex;flex-direction:column;gap:8px;min-width:240px}
-    .profile-card-cover-wrap{position:relative;margin:-18px -18px 12px -18px}
-    .profile-card-cover-wrap .profile-cover-card{border-bottom-left-radius:0;border-bottom-right-radius:0;border-left:none;border-right:none;border-top:none}
-    .profile-card-cover-wrap .avatar-floating{position:absolute;left:14px;bottom:-26px;box-shadow:0 8px 20px rgba(0,0,0,.28)}
-    .profile-card-header-with-cover{padding-top:22px}
-    .help{font-size:12px;color:var(--muted)}
-
-    .image-editor-modal{position:fixed;inset:0;background:rgba(2,6,23,.82);display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}
-    .image-editor-box{width:min(960px,100%);max-height:92vh;overflow:auto;background:#0b1220;border:1px solid rgba(255,255,255,.10);border-radius:24px;box-shadow:var(--shadow);padding:18px}
-    .image-editor-stage{position:relative;width:100%;height:min(58vh,520px);border-radius:20px;border:1px solid rgba(255,255,255,.10);overflow:hidden;background:
-      linear-gradient(45deg,rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%),
-      linear-gradient(45deg,rgba(255,255,255,.05) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.05) 75%);
-      background-size:24px 24px;background-position:0 0,12px 12px}
-    .image-editor-stage img{position:absolute;left:0;top:0;transform-origin:top left;user-select:none;-webkit-user-drag:none;touch-action:none;cursor:grab}
-    .image-editor-stage.dragging img{cursor:grabbing}
-    .crop-frame{position:absolute;inset:0;border:2px solid rgba(255,255,255,.92);box-shadow:0 0 0 9999px rgba(2,6,23,.55) inset;pointer-events:none}
-    .crop-frame.circle{border-radius:28px}
-    .crop-frame::after{content:'';position:absolute;inset:0;background:
-      linear-gradient(to right, transparent 33.33%, rgba(255,255,255,.28) 33.33%, rgba(255,255,255,.28) 34%, transparent 34%, transparent 66.66%, rgba(255,255,255,.28) 66.66%, rgba(255,255,255,.28) 67%, transparent 67%),
-      linear-gradient(to bottom, transparent 33.33%, rgba(255,255,255,.28) 33.33%, rgba(255,255,255,.28) 34%, transparent 34%, transparent 66.66%, rgba(255,255,255,.28) 66.66%, rgba(255,255,255,.28) 67%, transparent 67%)}
-    .image-editor-preview{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
-    .preview-card{padding:12px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08)}
-    .preview-canvas-wrap{border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04)}
-    .editor-controls{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:end;margin-top:14px}
-    .editor-slider{width:100%}
-    .gallery-upload-wrap{margin-top:16px;padding:16px;border:1px dashed rgba(255,255,255,.14);border-radius:18px;background:rgba(255,255,255,.03)}
-    .gallery-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
-    .gallery-item{border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:18px;overflow:hidden}
-    .gallery-item img{width:100%;height:180px;object-fit:cover;display:block;background:#0b1220}
-    .gallery-item-actions{display:flex;flex-wrap:wrap;gap:8px;padding:10px}
-    .gallery-item-actions .btn{padding:9px 10px;font-size:13px}
-    .gallery-empty{padding:16px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);color:var(--muted)}
-    .work-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
-    .work-gallery img{width:100%;height:120px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#0b1220;display:block}
-    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose,.gallery-grid,.work-gallery{grid-template-columns:1fr}}
+    .icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#172033;color:var(--text);cursor:pointer;font-size:20px}
+    .notif-badge{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center}
+    .notif-wrap{position:relative}.notif-panel{position:absolute;right:0;top:56px;width:380px;max-height:70vh;overflow:hidden;background:rgba(11,18,32,.98);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);z-index:50}.notif-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .notif-filters{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}.notif-list{max-height:52vh;overflow:auto;padding:10px}.notif-item{padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.03);margin-bottom:10px;cursor:pointer}.notif-item.unread{background:rgba(56,189,248,.09);border-color:rgba(56,189,248,.22)}
+    .notif-toast-wrap{position:fixed;top:18px;right:18px;display:flex;flex-direction:column;gap:10px;z-index:90}.notif-toast{width:min(360px,calc(100vw - 24px));background:#111827;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;box-shadow:var(--shadow);cursor:pointer}.notif-toast-title{font-weight:bold;margin-bottom:5px}
+    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}.notif-panel{width:min(92vw,380px)}}
   </style>
 </head>
 <body>
@@ -130,6 +92,22 @@
           <div class="small muted" id="roleText"></div>
         </div>
         <div class="row">
+          <div id="notificationWrap" class="notif-wrap hidden">
+            <button id="notifBellBtn" class="icon-btn" onclick="toggleNotificationsPanel()" title="Notificaciones">🔔<span id="notifBadge" class="notif-badge hidden">0</span></button>
+            <div id="notifPanel" class="notif-panel hidden">
+              <div class="notif-head">
+                <strong>Notificaciones</strong>
+                <button class="btn" onclick="markAllNotificationsRead()">Marcar todas</button>
+              </div>
+              <div class="notif-filters">
+                <button class="btn active-filter" id="notifFilter-all" onclick="setNotificationFilter('all')">Todas</button>
+                <button class="btn" id="notifFilter-new_message" onclick="setNotificationFilter('new_message')">Mensajes</button>
+                <button class="btn" id="notifFilter-added_to_favorites" onclick="setNotificationFilter('added_to_favorites')">Favoritos</button>
+                <button class="btn" id="notifFilter-favorite_profile_updated" onclick="setNotificationFilter('favorite_profile_updated')">Perfiles</button>
+              </div>
+              <div id="notificationsList" class="notif-list"><div class="empty">No hay notificaciones.</div></div>
+            </div>
+          </div>
           <button class="btn" onclick="loadProfiles()">Actualizar</button>
           <button class="btn btn-danger" onclick="logout()">Salir</button>
         </div>
@@ -157,101 +135,16 @@
     <section id="tab-miPerfil" class="tab-panel hidden">
       <div class="card">
         <h3>Mi perfil</h3>
-        <div class="profile-cover-editor">
-          <img id="profileCoverPreview" class="profile-cover-preview hidden" alt="Foto de portada">
-          <div id="profileCoverFallback" class="profile-cover-preview profile-cover-placeholder">SIN PORTADA</div>
-          <div class="profile-cover-actions">
-            <div>
-              <label>Foto de portada</label>
-              <input id="profileCoverInput" type="file" accept="image/*" onchange="handleCoverPhotoChange(event)">
-            </div>
-            <div class="help">La portada se ve arriba del perfil. Podés cargarla desde cualquier dispositivo, moverla, hacer zoom y recortarla antes de guardar.</div>
-            <div class="row">
-              <button class="btn" type="button" onclick="clearCoverPhoto()">Quitar portada</button>
-            </div>
-          </div>
-        </div>
-        <div class="profile-photo-wrap">
-          <img id="profilePhotoPreview" class="profile-photo-preview hidden" alt="Foto de perfil">
-          <div id="profilePhotoFallback" class="avatar-circle">?</div>
-          <div class="profile-photo-actions">
-            <div>
-              <label>Foto de perfil</label>
-              <input id="profilePhotoInput" type="file" accept="image/*" onchange="handleProfilePhotoChange(event)">
-            </div>
-            <div class="help">Podés subir una foto desde celular, PC o tablet, moverla, hacer zoom y recortarla antes de guardar.</div>
-            <div class="row">
-              <button class="btn" type="button" onclick="clearProfilePhoto()">Quitar foto</button>
-            </div>
-          </div>
-        </div>
-        <div class="gallery-upload-wrap">
-          <div class="section-title">
-            <h3 style="margin:0">Galería de trabajos o experiencia</h3>
-            <span class="small muted">Hasta 6 fotos</span>
-          </div>
-          <div class="help" style="margin-top:8px">Cada foto se puede mover, hacer zoom, recortar y centrar antes de guardarla.</div>
-          <div style="height:10px"></div>
-          <div class="row">
-            <input id="galleryPhotoInput" type="file" accept="image/*" onchange="handleGalleryPhotoChange(event)">
-            <button class="btn" type="button" onclick="clearGalleryPhotos()">Vaciar galería</button>
-          </div>
-          <div id="galleryList" class="gallery-empty">Todavía no cargaste fotos en la galería.</div>
-        </div>
         <div class="form-grid">
           <div><label>Nombre</label><input id="profileName"></div>
-          <div><label>Ciudad</label><input id="profileCity" placeholder="Ej: Luján"></div>
-          <div><label>Provincia</label><select id="profileProvince">
-            <option value="">Seleccionar provincia</option>
-            <option value="Buenos Aires">Buenos Aires</option>
-            <option value="CABA">CABA</option>
-            <option value="Catamarca">Catamarca</option>
-            <option value="Chaco">Chaco</option>
-            <option value="Chubut">Chubut</option>
-            <option value="Córdoba">Córdoba</option>
-            <option value="Corrientes">Corrientes</option>
-            <option value="Entre Ríos">Entre Ríos</option>
-            <option value="Formosa">Formosa</option>
-            <option value="Jujuy">Jujuy</option>
-            <option value="La Pampa">La Pampa</option>
-            <option value="La Rioja">La Rioja</option>
-            <option value="Mendoza">Mendoza</option>
-            <option value="Misiones">Misiones</option>
-            <option value="Neuquén">Neuquén</option>
-            <option value="Río Negro">Río Negro</option>
-            <option value="Salta">Salta</option>
-            <option value="San Juan">San Juan</option>
-            <option value="San Luis">San Luis</option>
-            <option value="Santa Cruz">Santa Cruz</option>
-            <option value="Santa Fe">Santa Fe</option>
-            <option value="Santiago del Estero">Santiago del Estero</option>
-            <option value="Tierra del Fuego">Tierra del Fuego</option>
-            <option value="Tucumán">Tucumán</option>
-          </select></div>
-          <div><label>Zona</label><select id="profileZone">
-            <option value="">Seleccionar zona</option>
-            <option value="Norte">Norte</option>
-            <option value="Sur">Sur</option>
-            <option value="Este">Este</option>
-            <option value="Oeste">Oeste</option>
-            <option value="Centro">Centro</option>
-            <option value="AMBA">AMBA</option>
-            <option value="Interior">Interior</option>
-          </select></div>
-          <div><label>Zona de trabajo</label><input id="profileWorkAreas" placeholder="Ej: AMBA, GBA Oeste, todo el país"></div>
+          <div><label>Ciudad</label><input id="profileCity"></div>
           <div><label>Rubro</label><input id="profileIndustry"></div>
-          <div><label>Años de experiencia</label><input id="profileExperienceYears" placeholder="Ej: 5 años"></div>
           <div><label>Teléfono</label><input id="profilePhone"></div>
-          <div><label>Sitio web o red</label><input id="profileWebsite" placeholder="https://... o Instagram/Facebook"></div>
           <div><label>Plan</label><select id="profilePlan"><option value="free">Free</option><option value="premium">Premium</option></select></div>
           <div><label>Etiquetas</label><input id="profileTags" placeholder="mayorista, retail, tecnología"></div>
         </div>
         <div style="height:10px"></div>
-        <div><label>Servicios ofrecidos</label><input id="profileServices" placeholder="ventas, distribución, representación, logística"></div>
-        <div style="height:10px"></div>
-        <div><label>Horarios</label><input id="profileWorkSchedule" placeholder="Lunes a viernes de 9 a 18 hs"></div>
-        <div style="height:10px"></div>
-        <div><label>Descripción</label><textarea id="profileDescription" placeholder="Contá qué ofrecés, cómo trabajás y qué zona cubrís"></textarea></div>
+        <div><label>Descripción</label><textarea id="profileDescription"></textarea></div>
         <div style="height:12px"></div>
         <div class="row">
           <button class="btn btn-primary" onclick="saveMyProfile()">Guardar perfil</button>
@@ -264,49 +157,11 @@
     <section id="tab-explorar" class="tab-panel hidden">
       <div class="card">
         <div class="toolbar">
-          <div><label>Buscar</label><input id="searchQ" placeholder="nombre, ciudad, provincia, zona o rubro..." oninput="loadProfiles()"></div>
+          <div><label>Buscar</label><input id="searchQ" placeholder="nombre, ciudad, rubro..." oninput="loadProfiles()"></div>
           <div><label>Tipo</label><select id="searchRole" onchange="loadProfiles()"><option value="todos">Todos</option><option value="vendedor">Vendedor</option><option value="empresa">Empresa</option></select></div>
-          <div><label>Provincia</label><select id="searchProvince" onchange="loadProfiles()">
-            <option value="todos">Todas</option>
-            <option value="Buenos Aires">Buenos Aires</option>
-            <option value="CABA">CABA</option>
-            <option value="Catamarca">Catamarca</option>
-            <option value="Chaco">Chaco</option>
-            <option value="Chubut">Chubut</option>
-            <option value="Córdoba">Córdoba</option>
-            <option value="Corrientes">Corrientes</option>
-            <option value="Entre Ríos">Entre Ríos</option>
-            <option value="Formosa">Formosa</option>
-            <option value="Jujuy">Jujuy</option>
-            <option value="La Pampa">La Pampa</option>
-            <option value="La Rioja">La Rioja</option>
-            <option value="Mendoza">Mendoza</option>
-            <option value="Misiones">Misiones</option>
-            <option value="Neuquén">Neuquén</option>
-            <option value="Río Negro">Río Negro</option>
-            <option value="Salta">Salta</option>
-            <option value="San Juan">San Juan</option>
-            <option value="San Luis">San Luis</option>
-            <option value="Santa Cruz">Santa Cruz</option>
-            <option value="Santa Fe">Santa Fe</option>
-            <option value="Santiago del Estero">Santiago del Estero</option>
-            <option value="Tierra del Fuego">Tierra del Fuego</option>
-            <option value="Tucumán">Tucumán</option>
-          </select></div>
-          <div><label>Zona</label><select id="searchZone" onchange="loadProfiles()">
-            <option value="todos">Todas</option>
-            <option value="Norte">Norte</option>
-            <option value="Sur">Sur</option>
-            <option value="Este">Este</option>
-            <option value="Oeste">Oeste</option>
-            <option value="Centro">Centro</option>
-            <option value="AMBA">AMBA</option>
-            <option value="Interior">Interior</option>
-          </select></div>
           <div><label>Verificado</label><select id="searchVerified" onchange="loadProfiles()"><option value="todos">Todos</option><option value="si">Sí</option><option value="no">No</option></select></div>
           <div><label>Plan</label><select id="searchPlan" onchange="loadProfiles()"><option value="todos">Todos</option><option value="premium">Premium</option><option value="free">Free</option></select></div>
           <div><label>Ordenar</label><select id="searchSort" onchange="loadProfiles()"><option value="destacados">Destacados</option><option value="mejor_puntuados">Mejor puntuados</option><option value="mas_recientes">Más recientes</option><option value="alfabetico">A-Z</option></select></div>
-          <div style="display:flex;align-items:end"><button class="btn" onclick="clearSearchFilters()">Limpiar filtros</button></div>
         </div>
       </div>
       <div style="height:16px"></div>
@@ -384,44 +239,9 @@
   </div>
 </div>
 
+<div id="notificationToasts" class="notif-toast-wrap"></div>
 
-<div id="imageEditorModal" class="image-editor-modal hidden">
-  <div class="image-editor-box">
-    <div class="section-title">
-      <div>
-        <h3 id="imageEditorTitle" style="margin:0">Editar imagen</h3>
-        <div class="small muted">Arrastrá la foto para moverla. Usá el zoom para agrandarla o achicarla hasta que encuadre bien.</div>
-      </div>
-      <button class="btn" type="button" onclick="closeImageEditor()">Cerrar</button>
-    </div>
-    <div style="height:12px"></div>
-    <div id="imageEditorStage" class="image-editor-stage">
-      <img id="imageEditorImg" alt="Editar imagen">
-      <div id="imageEditorFrame" class="crop-frame"></div>
-    </div>
-    <div class="editor-controls">
-      <div>
-        <label>Zoom</label>
-        <input id="imageEditorZoom" class="editor-slider" type="range" min="1" max="3" step="0.01" value="1" oninput="updateEditorZoom(this.value)">
-      </div>
-      <button class="btn" type="button" onclick="centerImageEditor()">Centrar</button>
-      <button class="btn" type="button" onclick="resetImageEditor()">Reiniciar</button>
-      <button class="btn btn-primary" type="button" onclick="applyImageEditor()">Usar recorte</button>
-    </div>
-    <div class="image-editor-preview">
-      <div class="preview-card">
-        <div class="small muted" style="margin-bottom:8px">Vista previa</div>
-        <div class="preview-canvas-wrap"><canvas id="imageEditorPreviewCanvas" style="display:block;width:100%;height:auto"></canvas></div>
-      </div>
-      <div class="preview-card">
-        <div class="small muted" style="margin-bottom:8px">Consejo</div>
-        <div class="small">Para portada conviene una imagen ancha. Para perfil conviene una foto centrada en la cara o logo.</div>
-      </div>
-    </div>
-  </div>
-</div>
 <script>
-
 let token = localStorage.getItem("rve_online_token") || "";
 let currentUser = null;
 let currentProfile = null;
@@ -430,9 +250,11 @@ let favoriteIds = [];
 let conversationsCache = [];
 let activeConversationId = "";
 let messagesCache = [];
-let pendingProfilePhoto = "";
-let pendingCoverPhoto = "";
-let pendingGalleryPhotos = [];
+let notificationsCache = [];
+let notificationFilter = 'all';
+let notificationsUnreadCount = 0;
+let notificationPollTimer = null;
+let shownToastIds = new Set();
 
 function authHeaders() {
   return token ? { "Authorization": "Bearer " + token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -453,446 +275,6 @@ function formatMoney(amount, currency = "ARS") {
 }
 function normalizePhone(phone) {
   return String(phone || "").replace(/[^\d]/g, "");
-}
-function getInitials(name) {
-  return String(name || "?").trim().split(/\s+/).slice(0,2).map(x => x[0] || "").join("").toUpperCase() || "?";
-}
-function renderAvatar(photoUrl, name, extraClass = "") {
-  if (photoUrl) return `<img src="${esc(photoUrl)}" alt="${esc(name || "Perfil")}" class="profile-photo-preview ${extraClass}">`;
-  return `<div class="avatar-circle ${extraClass}">${esc(getInitials(name))}</div>`;
-}
-function setProfilePhotoPreview(photoUrl, name) {
-  const img = document.getElementById("profilePhotoPreview");
-  const fallback = document.getElementById("profilePhotoFallback");
-  if (!img || !fallback) return;
-  if (photoUrl) {
-    img.src = photoUrl;
-    img.classList.remove("hidden");
-    fallback.classList.add("hidden");
-  } else {
-    img.removeAttribute("src");
-    img.classList.add("hidden");
-    fallback.textContent = getInitials(name);
-    fallback.classList.remove("hidden");
-  }
-}
-function setCoverPhotoPreview(photoUrl) {
-  const img = document.getElementById("profileCoverPreview");
-  const fallback = document.getElementById("profileCoverFallback");
-  if (!img || !fallback) return;
-  if (photoUrl) {
-    img.src = photoUrl;
-    img.classList.remove("hidden");
-    fallback.classList.add("hidden");
-  } else {
-    img.removeAttribute("src");
-    img.classList.add("hidden");
-    fallback.classList.remove("hidden");
-  }
-}
-
-const imageEditorState = {
-  target: null,
-  originalDataUrl: "",
-  img: null,
-  imgW: 0,
-  imgH: 0,
-  outputW: 0,
-  outputH: 0,
-  stageW: 0,
-  stageH: 0,
-  baseScale: 1,
-  zoom: 1,
-  x: 0,
-  y: 0,
-  dragging: false,
-  startX: 0,
-  startY: 0,
-  startImgX: 0,
-  startImgY: 0
-};
-
-async function fileToDataUrl(file) {
-  const allowed = ["image/jpeg", "image/png", "image/webp", "image/jpg", "image/gif"];
-  if (!allowed.includes(file.type)) throw new Error("Elegí una imagen JPG, PNG, WEBP o GIF");
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("No se pudo leer la imagen"));
-    reader.readAsDataURL(file);
-  });
-}
-
-async function loadImageElement(dataUrl) {
-  return await new Promise((resolve, reject) => {
-    const i = new Image();
-    i.onload = () => resolve(i);
-    i.onerror = () => reject(new Error("No se pudo procesar la imagen"));
-    i.src = dataUrl;
-  });
-}
-
-function getEditorElements() {
-  return {
-    modal: document.getElementById("imageEditorModal"),
-    stage: document.getElementById("imageEditorStage"),
-    img: document.getElementById("imageEditorImg"),
-    frame: document.getElementById("imageEditorFrame"),
-    zoom: document.getElementById("imageEditorZoom"),
-    title: document.getElementById("imageEditorTitle"),
-    previewCanvas: document.getElementById("imageEditorPreviewCanvas")
-  };
-}
-
-function normalizeEditorTarget(target) {
-  if (typeof target === "string") {
-    if (target === "cover") return { kind: "cover", outputW: 1400, outputH: 500, title: "Editar foto de portada", circle: false };
-    if (target === "gallery") return { kind: "gallery", index: -1, outputW: 1200, outputH: 900, title: "Editar foto de galería", circle: false };
-    return { kind: "profile", outputW: 700, outputH: 700, title: "Editar foto de perfil", circle: true };
-  }
-  return {
-    kind: target?.kind || "profile",
-    index: Number.isInteger(target?.index) ? target.index : -1,
-    outputW: target?.outputW || 700,
-    outputH: target?.outputH || 700,
-    title: target?.title || "Editar imagen",
-    circle: Boolean(target?.circle)
-  };
-}
-
-async function openImageEditor(dataUrl, target) {
-  const els = getEditorElements();
-  const img = await loadImageElement(dataUrl);
-  const normalizedTarget = normalizeEditorTarget(target);
-  imageEditorState.target = normalizedTarget;
-  imageEditorState.originalDataUrl = dataUrl;
-  imageEditorState.img = img;
-  imageEditorState.imgW = img.width;
-  imageEditorState.imgH = img.height;
-  imageEditorState.outputW = normalizedTarget.outputW;
-  imageEditorState.outputH = normalizedTarget.outputH;
-  els.title.textContent = normalizedTarget.title;
-  els.frame.classList.toggle("circle", normalizedTarget.circle);
-  els.modal.classList.remove("hidden");
-  requestAnimationFrame(() => {
-    setupImageEditor();
-  });
-}
-
-function setupImageEditor() {
-  const els = getEditorElements();
-  const stageRect = els.stage.getBoundingClientRect();
-  imageEditorState.stageW = Math.max(260, Math.round(stageRect.width));
-  imageEditorState.stageH = Math.max(260, Math.round(stageRect.height));
-  const ratio = imageEditorState.outputW / imageEditorState.outputH;
-  let cropW = imageEditorState.stageW;
-  let cropH = cropW / ratio;
-  if (cropH > imageEditorState.stageH) {
-    cropH = imageEditorState.stageH;
-    cropW = cropH * ratio;
-  }
-  els.frame.style.width = cropW + "px";
-  els.frame.style.height = cropH + "px";
-  els.frame.style.left = Math.round((imageEditorState.stageW - cropW) / 2) + "px";
-  els.frame.style.top = Math.round((imageEditorState.stageH - cropH) / 2) + "px";
-  els.img.src = imageEditorState.originalDataUrl;
-  const coverScale = Math.max(cropW / imageEditorState.imgW, cropH / imageEditorState.imgH);
-  imageEditorState.baseScale = coverScale;
-  imageEditorState.zoom = 1;
-  if (els.zoom) {
-    els.zoom.min = "1";
-    els.zoom.max = "3.2";
-    els.zoom.step = "0.01";
-    els.zoom.value = "1";
-  }
-  centerImageEditor();
-  bindImageEditorEvents();
-  renderImageEditor();
-}
-
-function bindImageEditorEvents() {
-  const els = getEditorElements();
-  if (els.stage.dataset.bound === "1") return;
-  const startDrag = (clientX, clientY) => {
-    imageEditorState.dragging = true;
-    imageEditorState.startX = clientX;
-    imageEditorState.startY = clientY;
-    imageEditorState.startImgX = imageEditorState.x;
-    imageEditorState.startImgY = imageEditorState.y;
-    els.stage.classList.add("dragging");
-  };
-  const moveDrag = (clientX, clientY) => {
-    if (!imageEditorState.dragging) return;
-    imageEditorState.x = imageEditorState.startImgX + (clientX - imageEditorState.startX);
-    imageEditorState.y = imageEditorState.startImgY + (clientY - imageEditorState.startY);
-    clampImageEditorPosition();
-    renderImageEditor();
-  };
-  const endDrag = () => {
-    imageEditorState.dragging = false;
-    els.stage.classList.remove("dragging");
-  };
-  els.stage.addEventListener("mousedown", e => { e.preventDefault(); startDrag(e.clientX, e.clientY); });
-  window.addEventListener("mousemove", e => moveDrag(e.clientX, e.clientY));
-  window.addEventListener("mouseup", endDrag);
-  els.stage.addEventListener("touchstart", e => {
-    if (!e.touches?.length) return;
-    const t = e.touches[0];
-    startDrag(t.clientX, t.clientY);
-  }, { passive: true });
-  window.addEventListener("touchmove", e => {
-    if (!imageEditorState.dragging || !e.touches?.length) return;
-    const t = e.touches[0];
-    moveDrag(t.clientX, t.clientY);
-  }, { passive: true });
-  window.addEventListener("touchend", endDrag);
-  window.addEventListener("resize", () => {
-    const modalVisible = !getEditorElements().modal.classList.contains("hidden");
-    if (modalVisible) setupImageEditor();
-  });
-  els.stage.dataset.bound = "1";
-}
-
-function currentImageScale() {
-  return imageEditorState.baseScale * imageEditorState.zoom;
-}
-
-function centerImageEditor() {
-  const els = getEditorElements();
-  const frameRect = els.frame.getBoundingClientRect();
-  const stageRect = els.stage.getBoundingClientRect();
-  const frameX = frameRect.left - stageRect.left;
-  const frameY = frameRect.top - stageRect.top;
-  const frameW = frameRect.width;
-  const frameH = frameRect.height;
-  const scale = currentImageScale();
-  imageEditorState.x = frameX + (frameW - imageEditorState.imgW * scale) / 2;
-  imageEditorState.y = frameY + (frameH - imageEditorState.imgH * scale) / 2;
-  clampImageEditorPosition();
-  renderImageEditor();
-}
-
-function resetImageEditor() {
-  const els = getEditorElements();
-  imageEditorState.zoom = 1;
-  if (els.zoom) els.zoom.value = "1";
-  centerImageEditor();
-}
-
-function updateEditorZoom(value) {
-  const prevScale = currentImageScale();
-  imageEditorState.zoom = Number(value || 1);
-  const nextScale = currentImageScale();
-  const els = getEditorElements();
-  const frameRect = els.frame.getBoundingClientRect();
-  const stageRect = els.stage.getBoundingClientRect();
-  const centerX = (frameRect.left - stageRect.left) + frameRect.width / 2;
-  const centerY = (frameRect.top - stageRect.top) + frameRect.height / 2;
-  imageEditorState.x = centerX - ((centerX - imageEditorState.x) * (nextScale / prevScale));
-  imageEditorState.y = centerY - ((centerY - imageEditorState.y) * (nextScale / prevScale));
-  clampImageEditorPosition();
-  renderImageEditor();
-}
-
-function clampImageEditorPosition() {
-  const els = getEditorElements();
-  const stage = els.stage.getBoundingClientRect();
-  const frame = els.frame.getBoundingClientRect();
-  const frameX = frame.left - stage.left;
-  const frameY = frame.top - stage.top;
-  const frameW = frame.width;
-  const frameH = frame.height;
-  const scale = currentImageScale();
-  const imgW = imageEditorState.imgW * scale;
-  const imgH = imageEditorState.imgH * scale;
-  const minX = frameX + frameW - imgW;
-  const maxX = frameX;
-  const minY = frameY + frameH - imgH;
-  const maxY = frameY;
-  imageEditorState.x = Math.min(maxX, Math.max(minX, imageEditorState.x));
-  imageEditorState.y = Math.min(maxY, Math.max(minY, imageEditorState.y));
-}
-
-function renderImageEditor() {
-  const els = getEditorElements();
-  const scale = currentImageScale();
-  els.img.style.width = imageEditorState.imgW + "px";
-  els.img.style.height = imageEditorState.imgH + "px";
-  els.img.style.transform = `translate(${imageEditorState.x}px, ${imageEditorState.y}px) scale(${scale})`;
-  renderImageEditorPreview();
-}
-
-function renderImageEditorPreview() {
-  const els = getEditorElements();
-  const canvas = els.previewCanvas;
-  if (!canvas) return;
-  const outW = imageEditorState.outputW;
-  const outH = imageEditorState.outputH;
-  canvas.width = outW;
-  canvas.height = outH;
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0, 0, outW, outH);
-  const stage = els.stage.getBoundingClientRect();
-  const frame = els.frame.getBoundingClientRect();
-  const frameX = frame.left - stage.left;
-  const frameY = frame.top - stage.top;
-  const scale = currentImageScale();
-  const sx = (frameX - imageEditorState.x) / scale;
-  const sy = (frameY - imageEditorState.y) / scale;
-  const sw = frame.width / scale;
-  const sh = frame.height / scale;
-  ctx.drawImage(imageEditorState.img, sx, sy, sw, sh, 0, 0, outW, outH);
-}
-
-function exportEditedImage() {
-  const els = getEditorElements();
-  const canvas = els.previewCanvas;
-  let out = canvas.toDataURL("image/jpeg", 0.88);
-  if (out.length > 1800000) out = canvas.toDataURL("image/jpeg", 0.76);
-  if (out.length > 2800000) throw new Error("La imagen sigue siendo muy pesada. Probá con una foto más liviana.");
-  return out;
-}
-
-function applyImageEditor() {
-  try {
-    const out = exportEditedImage();
-    const target = imageEditorState.target || { kind: "profile" };
-    if (target.kind === "cover") {
-      pendingCoverPhoto = out;
-      setCoverPhotoPreview(out);
-      const input = document.getElementById("profileCoverInput");
-      if (input) input.value = "";
-    } else if (target.kind === "gallery") {
-      if (Number.isInteger(target.index) && target.index >= 0 && target.index < pendingGalleryPhotos.length) pendingGalleryPhotos[target.index] = out;
-      else {
-        if (pendingGalleryPhotos.length >= 6) throw new Error("La galería permite hasta 6 fotos");
-        pendingGalleryPhotos.push(out);
-      }
-      const input = document.getElementById("galleryPhotoInput");
-      if (input) input.value = "";
-      renderGalleryEditor();
-    } else {
-      pendingProfilePhoto = out;
-      setProfilePhotoPreview(out, document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
-      const input = document.getElementById("profilePhotoInput");
-      if (input) input.value = "";
-    }
-    closeImageEditor();
-  } catch (e) {
-    alert(e.message);
-  }
-}
-
-function closeImageEditor() {
-  const els = getEditorElements();
-  els.modal.classList.add("hidden");
-}
-
-async function handleProfilePhotoChange(event) {
-  const file = event?.target?.files?.[0];
-  if (!file) return;
-  try {
-    const dataUrl = await fileToDataUrl(file);
-    await openImageEditor(dataUrl, "profile");
-  } catch (e) {
-    alert(e.message);
-    event.target.value = "";
-  }
-}
-
-async function handleCoverPhotoChange(event) {
-  const file = event?.target?.files?.[0];
-  if (!file) return;
-  try {
-    const dataUrl = await fileToDataUrl(file);
-    await openImageEditor(dataUrl, "cover");
-  } catch (e) {
-    alert(e.message);
-    event.target.value = "";
-  }
-}
-
-async function handleGalleryPhotoChange(event) {
-  const file = event?.target?.files?.[0];
-  if (!file) return;
-  if (pendingGalleryPhotos.length >= 6) {
-    alert("La galería permite hasta 6 fotos.");
-    event.target.value = "";
-    return;
-  }
-  try {
-    const dataUrl = await fileToDataUrl(file);
-    await openImageEditor(dataUrl, { kind: "gallery", index: -1, outputW: 1200, outputH: 900, title: "Editar foto de galería", circle: false });
-  } catch (e) {
-    alert(e.message);
-    event.target.value = "";
-  }
-}
-
-function renderGalleryEditor() {
-  const box = document.getElementById("galleryList");
-  if (!box) return;
-  if (!pendingGalleryPhotos.length) {
-    box.className = "gallery-empty";
-    box.innerHTML = "Todavía no cargaste fotos en la galería.";
-    return;
-  }
-  box.className = "gallery-grid";
-  box.innerHTML = pendingGalleryPhotos.map((img, idx) => `
-    <div class="gallery-item">
-      <img src="${esc(img)}" alt="Trabajo ${idx + 1}">
-      <div class="gallery-item-actions">
-        <button class="btn" type="button" onclick="editGalleryPhoto(${idx})">Recortar / centrar</button>
-        <button class="btn" type="button" onclick="moveGalleryPhoto(${idx}, -1)">←</button>
-        <button class="btn" type="button" onclick="moveGalleryPhoto(${idx}, 1)">→</button>
-        <button class="btn btn-danger" type="button" onclick="removeGalleryPhoto(${idx})">Quitar</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-function removeGalleryPhoto(index) {
-  pendingGalleryPhotos.splice(index, 1);
-  renderGalleryEditor();
-}
-
-function clearGalleryPhotos() {
-  pendingGalleryPhotos = [];
-  const input = document.getElementById("galleryPhotoInput");
-  if (input) input.value = "";
-  renderGalleryEditor();
-}
-
-function moveGalleryPhoto(index, direction) {
-  const next = index + direction;
-  if (next < 0 || next >= pendingGalleryPhotos.length) return;
-  const tmp = pendingGalleryPhotos[index];
-  pendingGalleryPhotos[index] = pendingGalleryPhotos[next];
-  pendingGalleryPhotos[next] = tmp;
-  renderGalleryEditor();
-}
-
-async function editGalleryPhoto(index) {
-  const current = pendingGalleryPhotos[index];
-  if (!current) return;
-  try {
-    await openImageEditor(current, { kind: "gallery", index, outputW: 1200, outputH: 900, title: "Reencuadrar foto de galería", circle: false });
-  } catch (e) {
-    alert(e.message);
-  }
-}
-
-function clearProfilePhoto() {
-  pendingProfilePhoto = "";
-  const input = document.getElementById("profilePhotoInput");
-  if (input) input.value = "";
-  setProfilePhotoPreview("", document.getElementById("profileName")?.value || currentProfile?.name || currentUser?.name || "?");
-}
-function clearCoverPhoto() {
-  pendingCoverPhoto = "";
-  const input = document.getElementById("profileCoverInput");
-  if (input) input.value = "";
-  setCoverPhotoPreview("");
 }
 function showGuest(){ document.getElementById("guestView").classList.remove("hidden"); document.getElementById("appView").classList.add("hidden"); }
 function showApp(){ document.getElementById("guestView").classList.add("hidden"); document.getElementById("appView").classList.remove("hidden"); }
@@ -944,7 +326,14 @@ function logout() {
   conversationsCache = [];
   activeConversationId = "";
   messagesCache = [];
+  notificationsCache = [];
+  notificationsUnreadCount = 0;
+  shownToastIds = new Set();
+  if (notificationPollTimer) clearInterval(notificationPollTimer);
+  notificationPollTimer = null;
   localStorage.removeItem("rve_online_token");
+  renderNotifications();
+  updateNotificationBadge();
   showGuest();
 }
 
@@ -958,39 +347,164 @@ async function loadMe() {
     document.getElementById("adminTabBtn").classList.toggle("hidden", currentUser.role !== "admin");
     document.getElementById("favoritesTabBtn").classList.toggle("hidden", !token);
     document.getElementById("messagesTabBtn").classList.toggle("hidden", !token);
+    document.getElementById("notificationWrap").classList.toggle("hidden", !token);
     fillMyProfile();
     showApp();
     await loadProfiles();
     await loadConversations();
+    await refreshNotifications(true);
+    startNotificationPolling();
     if (currentUser.role === "admin") await loadAdmin();
   } catch { logout(); }
+}
+
+
+function updateNotificationBadge() {
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  badge.textContent = String(notificationsUnreadCount || 0);
+  badge.classList.toggle('hidden', !notificationsUnreadCount);
+}
+
+function renderNotifications() {
+  const box = document.getElementById('notificationsList');
+  if (!box) return;
+  const items = notificationFilter === 'all' ? notificationsCache : notificationsCache.filter(n => n.type === notificationFilter);
+  ['all', 'new_message', 'added_to_favorites', 'favorite_profile_updated'].forEach(type => {
+    document.getElementById('notifFilter-' + type)?.classList.toggle('active-filter', notificationFilter === type);
+  });
+  if (!items.length) {
+    box.innerHTML = '<div class="empty">No hay notificaciones.</div>';
+    return;
+  }
+  box.innerHTML = items.map(n => `
+    <div class="notif-item ${n.isRead ? '' : 'unread'}" onclick="openNotification('${n.id}')">
+      <div class="item-top">
+        <div><strong>${esc(n.title)}</strong></div>
+        ${n.isRead ? '' : '<span class="badge">Nueva</span>'}
+      </div>
+      <div class="small" style="margin-top:6px">${esc(n.message)}</div>
+      ${n.meta?.changedFields?.length ? `<div class="small muted" style="margin-top:6px">Cambios: ${esc(n.meta.changedFields.join(', '))}</div>` : ''}
+      <div class="small muted" style="margin-top:8px">${new Date(n.createdAt).toLocaleString('es-AR')}</div>
+    </div>
+  `).join('');
+}
+
+function toggleNotificationsPanel(forceOpen = null) {
+  const panel = document.getElementById('notifPanel');
+  if (!panel) return;
+  const shouldOpen = forceOpen === null ? panel.classList.contains('hidden') : Boolean(forceOpen);
+  panel.classList.toggle('hidden', !shouldOpen);
+  if (shouldOpen) refreshNotifications(true);
+}
+
+function setNotificationFilter(type) {
+  notificationFilter = type || 'all';
+  renderNotifications();
+}
+
+async function refreshNotifications(skipToast = false) {
+  if (!token) return;
+  try {
+    const [countData, listData] = await Promise.all([
+      api('/api/notifications/unread-count', { headers: authHeaders() }),
+      api('/api/notifications?limit=40', { headers: authHeaders() })
+    ]);
+    const previousUnread = notificationsUnreadCount;
+    notificationsUnreadCount = countData.count || 0;
+    notificationsCache = listData.notifications || [];
+    updateNotificationBadge();
+    renderNotifications();
+    if (!skipToast && notificationsUnreadCount >= previousUnread) {
+      const newestUnread = notificationsCache.find(n => !n.isRead);
+      if (newestUnread && !shownToastIds.has(newestUnread.id)) showNotificationToast(newestUnread);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function startNotificationPolling() {
+  if (notificationPollTimer) clearInterval(notificationPollTimer);
+  if (!token) return;
+  notificationPollTimer = setInterval(() => {
+    refreshNotifications(false);
+    if (activeConversationId) loadConversations(activeConversationId);
+  }, 8000);
+}
+
+function showNotificationToast(notification) {
+  if (!notification || shownToastIds.has(notification.id)) return;
+  shownToastIds.add(notification.id);
+  const wrap = document.getElementById('notificationToasts');
+  if (!wrap) return;
+  const el = document.createElement('div');
+  el.className = 'notif-toast';
+  el.innerHTML = `<div class="notif-toast-title">${esc(notification.title)}</div><div class="small">${esc(notification.message)}</div>`;
+  el.onclick = () => openNotification(notification.id);
+  wrap.prepend(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-4px)';
+  }, 3600);
+  setTimeout(() => el.remove(), 4200);
+}
+
+async function markAllNotificationsRead() {
+  try {
+    await api('/api/notifications/read-all', { method: 'PATCH', headers: authHeaders() });
+    notificationsCache = notificationsCache.map(n => ({ ...n, isRead: true }));
+    notificationsUnreadCount = 0;
+    updateNotificationBadge();
+    renderNotifications();
+  } catch (e) { alert(e.message); }
+}
+
+async function openNotification(notificationId) {
+  const item = notificationsCache.find(n => n.id === notificationId);
+  if (!item) return;
+  try {
+    if (!item.isRead) {
+      await api('/api/notifications/' + notificationId + '/read', { method: 'PATCH', headers: authHeaders() });
+      item.isRead = true;
+      notificationsUnreadCount = Math.max(0, notificationsUnreadCount - 1);
+      updateNotificationBadge();
+      renderNotifications();
+    }
+  } catch (e) {
+    console.error(e);
+  }
+
+  toggleNotificationsPanel(false);
+  if (item.type === 'new_message') {
+    activateTab('mensajes');
+    if (item.meta?.conversationId) {
+      activeConversationId = item.meta.conversationId;
+      await loadConversations(item.meta.conversationId);
+    } else {
+      await loadConversations();
+    }
+    return;
+  }
+  if (item.type === 'favorite_profile_updated') {
+    activateTab('favoritos');
+    await loadFavorites(true);
+    return;
+  }
+  if (item.type === 'added_to_favorites') {
+    activateTab('explorar');
+    await loadProfiles();
+  }
 }
 
 function fillMyProfile() {
   document.getElementById("profileName").value = currentProfile?.name || "";
   document.getElementById("profileCity").value = currentProfile?.city || "";
-  document.getElementById("profileProvince").value = currentProfile?.province || "";
-  document.getElementById("profileZone").value = currentProfile?.zone || "";
-  document.getElementById("profileWorkAreas").value = currentProfile?.workAreas || "";
   document.getElementById("profileIndustry").value = currentProfile?.industry || "";
-  document.getElementById("profileExperienceYears").value = currentProfile?.experienceYears || "";
   document.getElementById("profilePhone").value = currentProfile?.phone || "";
-  document.getElementById("profileWebsite").value = currentProfile?.website || "";
   document.getElementById("profilePlan").value = currentProfile?.plan || "free";
   document.getElementById("profileTags").value = (currentProfile?.tags || []).join(", ");
-  document.getElementById("profileServices").value = (currentProfile?.services || []).join(", ");
-  document.getElementById("profileWorkSchedule").value = currentProfile?.workSchedule || "";
   document.getElementById("profileDescription").value = currentProfile?.description || "";
-  pendingProfilePhoto = currentProfile?.photoUrl || "";
-  pendingCoverPhoto = currentProfile?.coverUrl || "";
-  pendingGalleryPhotos = Array.isArray(currentProfile?.galleryUrls) ? [...currentProfile.galleryUrls] : [];
-  const input = document.getElementById("profilePhotoInput");
-  if (input) input.value = "";
-  const coverInput = document.getElementById("profileCoverInput");
-  if (coverInput) coverInput.value = "";
-  setProfilePhotoPreview(pendingProfilePhoto, currentProfile?.name || currentUser?.name || "?");
-  setCoverPhotoPreview(pendingCoverPhoto);
-  renderGalleryEditor();
 }
 
 async function saveMyProfile() {
@@ -1001,21 +515,11 @@ async function saveMyProfile() {
       body: JSON.stringify({
         name: document.getElementById("profileName").value.trim(),
         city: document.getElementById("profileCity").value.trim(),
-        province: document.getElementById("profileProvince").value.trim(),
-        zone: document.getElementById("profileZone").value.trim(),
-        workAreas: document.getElementById("profileWorkAreas").value.trim(),
         industry: document.getElementById("profileIndustry").value.trim(),
-        experienceYears: document.getElementById("profileExperienceYears").value.trim(),
         phone: document.getElementById("profilePhone").value.trim(),
-        website: document.getElementById("profileWebsite").value.trim(),
         plan: document.getElementById("profilePlan").value,
         tags: document.getElementById("profileTags").value.split(",").map(x => x.trim()).filter(Boolean),
-        services: document.getElementById("profileServices").value.split(",").map(x => x.trim()).filter(Boolean),
-        workSchedule: document.getElementById("profileWorkSchedule").value.trim(),
-        description: document.getElementById("profileDescription").value.trim(),
-        photoUrl: pendingProfilePhoto,
-        coverUrl: pendingCoverPhoto,
-        galleryUrls: pendingGalleryPhotos
+        description: document.getElementById("profileDescription").value.trim()
       })
     });
     currentProfile = data.profile;
@@ -1060,11 +564,9 @@ async function loadProfiles() {
     const role = encodeURIComponent(document.getElementById("searchRole")?.value || "todos");
     const verified = encodeURIComponent(document.getElementById("searchVerified")?.value || "todos");
     const plan = encodeURIComponent(document.getElementById("searchPlan")?.value || "todos");
-    const province = encodeURIComponent(document.getElementById("searchProvince")?.value || "todos");
-    const zone = encodeURIComponent(document.getElementById("searchZone")?.value || "todos");
     const sort = encodeURIComponent(document.getElementById("searchSort")?.value || "destacados");
     const viewerUserId = encodeURIComponent(currentUser?.id || "");
-    const data = await api(`/api/profiles?q=${q}&role=${role}&verified=${verified}&plan=${plan}&province=${province}&zone=${zone}&sort=${sort}&viewerUserId=${viewerUserId}`);
+    const data = await api(`/api/profiles?q=${q}&role=${role}&verified=${verified}&plan=${plan}&sort=${sort}&viewerUserId=${viewerUserId}`);
     profilesCache = data.profiles;
     renderProfiles();
     renderHome();
@@ -1072,30 +574,8 @@ async function loadProfiles() {
   } catch (e) { console.error(e); }
 }
 
-function clearSearchFilters() {
-  const ids = {
-    searchQ: "",
-    searchRole: "todos",
-    searchProvince: "todos",
-    searchZone: "todos",
-    searchVerified: "todos",
-    searchPlan: "todos",
-    searchSort: "destacados"
-  };
-  Object.entries(ids).forEach(([id, value]) => {
-    const el = document.getElementById(id);
-    if (el) el.value = value;
-  });
-  loadProfiles();
-}
-
 function metricCard(value, label) {
   return `<div class="card metric"><div class="value">${value}</div><div class="label">${label}</div></div>`;
-}
-
-function formatLocation(p) {
-  const parts = [p?.city || "", p?.province || ""].map(x => String(x || "").trim()).filter(Boolean);
-  return esc(parts.length ? parts.join(", ") : "Sin ubicación");
 }
 
 function renderHome() {
@@ -1114,15 +594,10 @@ function renderHome() {
 
   document.getElementById("latestProfiles").innerHTML = profilesCache.slice(0, 6).map(p => `
     <div class="item">
-      ${p.coverUrl ? `<img src="${esc(p.coverUrl)}" alt="Portada de ${esc(p.name)}" class="profile-cover-card">` : `<div class="profile-cover-card profile-cover-placeholder">PORTADA</div>`}
-      ${(Array.isArray(p.galleryUrls) && p.galleryUrls.length) ? `<div class="work-gallery">${p.galleryUrls.slice(0,3).map(img => `<img src="${esc(img)}" alt="Trabajo de ${esc(p.name)}">`).join("")}</div>` : ``}
-      <div class="item-top" style="margin-top:12px">
-        <div style="display:flex;gap:12px;align-items:center">
-          ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
-          <div>
-            <strong>${esc(p.name)}</strong>
-            <div class="small muted">${formatLocation(p)} · ${esc(p.industry || "Sin rubro")}</div>
-          </div>
+      <div class="item-top">
+        <div>
+          <strong>${esc(p.name)}</strong>
+          <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")}</div>
         </div>
         <div class="row">
           <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
@@ -1143,31 +618,22 @@ function renderProfiles() {
 
   box.innerHTML = profilesCache.map(p => `
     <div class="item">
-      <div class="profile-card-cover-wrap">
-        ${p.coverUrl ? `<img src="${esc(p.coverUrl)}" alt="Portada de ${esc(p.name)}" class="profile-cover-card">` : `<div class="profile-cover-card profile-cover-placeholder">SIN PORTADA</div>`}
-        <div class="avatar-floating">${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}</div>
-      </div>
-      <div class="item-top profile-card-header-with-cover">
-        <div style="display:flex;gap:12px;align-items:center">
-          <div style="width:62px"></div>
-          <div>
-            <h3 style="margin:0 0 6px 0">${esc(p.name)}</h3>
-            <div class="row">
+      <div class="item-top">
+        <div>
+          <h3 style="margin:0 0 6px 0">${esc(p.name)}</h3>
+          <div class="row">
             <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
             <span class="badge premium">${esc(p.plan)}</span>
             ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
-            <span class="pill">${formatLocation(p)}</span>
+            <span class="pill">${esc(p.city || "Sin ciudad")}</span>
             <span class="pill">${esc(p.industry || "Sin rubro")}</span>
-            </div>
           </div>
         </div>
         <div>${stars(p.stats.avg)} <span class="small muted">${p.stats.avg ? p.stats.avg.toFixed(1) : "Sin notas"} · ${p.stats.count}</span></div>
       </div>
       <div style="height:8px"></div>
       <div>${esc(p.description || "Sin descripción")}</div>
-      ${(Array.isArray(p.galleryUrls) && p.galleryUrls.length) ? `<div class="work-gallery">${p.galleryUrls.slice(0,6).map(img => `<img src="${esc(img)}" alt="Trabajo de ${esc(p.name)}">`).join("")}</div>` : ``}
       <div style="height:8px"></div>
-      <div class="small muted">Ubicación: ${formatLocation(p)}${p.zone ? ` · Zona ${esc(p.zone)}` : ""}</div>
       <div class="small muted">Contacto: ${esc(p.email || "")} ${p.phone ? `· ${esc(p.phone)}` : ""}</div>
       <div class="row" style="margin-top:10px">
         ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
@@ -1255,17 +721,9 @@ function renderFavorites() {
   box.className = "";
   box.innerHTML = items.map(p => `
     <div class="review">
-      ${p.coverUrl ? `<img src="${esc(p.coverUrl)}" alt="Portada de ${esc(p.name)}" class="profile-cover-card" style="height:120px;margin-bottom:10px">` : ``}
-      <div style="display:flex;gap:12px;align-items:center">
-        ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
-        <div>
-          <strong>${esc(p.name)}</strong>
-          <div class="small muted">${formatLocation(p)} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}${p.experienceYears ? ` · ${esc(p.experienceYears)}` : ""}</div>
-          ${p.workAreas ? `<div class="small muted">Zona de trabajo: ${esc(p.workAreas)}</div>` : ``}
-        </div>
-      </div>
+      <strong>${esc(p.name)}</strong>
+      <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
       <div style="margin-top:8px">${esc(p.description || "Sin descripción")}</div>
-      ${(Array.isArray(p.galleryUrls) && p.galleryUrls.length) ? `<div class="work-gallery">${p.galleryUrls.slice(0,3).map(img => `<img src="${esc(img)}" alt="Trabajo de ${esc(p.name)}">`).join("")}</div>` : ``}
       <div class="row" style="margin-top:10px">
         ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
         ${p.email ? `<a class="btn" href="mailto:${encodeURIComponent(p.email)}">Email</a>` : ""}
@@ -1551,6 +1009,14 @@ async function deleteUser(id) {
   } catch (e) { alert(e.message); }
 }
 
+
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('notificationWrap');
+  const panel = document.getElementById('notifPanel');
+  if (!wrap || !panel || panel.classList.contains('hidden')) return;
+  if (!wrap.contains(e.target)) panel.classList.add('hidden');
+});
+
 function bindTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => activateTab(btn.dataset.tab));
@@ -1567,6 +1033,5 @@ document.addEventListener("keydown", (e) => {
 bindTabs();
 if (token) loadMe();
 </script>
-  <script src="_script_check.js"></script>
 </body>
 </html>
