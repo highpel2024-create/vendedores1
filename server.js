@@ -24,7 +24,7 @@ const pool = new Pool({
     : false
 });
 
-app.use(express.json({ limit: "8mb" }));
+app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 function makeId() {
@@ -55,61 +55,16 @@ async function initDb() {
       type TEXT NOT NULL,
       name TEXT NOT NULL,
       city TEXT DEFAULT '',
-      province TEXT DEFAULT '',
-      zone TEXT DEFAULT '',
-      work_areas TEXT DEFAULT '',
       industry TEXT DEFAULT '',
-      experience_years TEXT DEFAULT '',
-      services_json TEXT DEFAULT '[]',
-      work_schedule TEXT DEFAULT '',
       description TEXT DEFAULT '',
       phone TEXT DEFAULT '',
-      website TEXT DEFAULT '',
       email TEXT DEFAULT '',
       tags_json TEXT DEFAULT '[]',
       plan TEXT NOT NULL DEFAULT 'free',
       verified TEXT NOT NULL DEFAULT 'no',
-      photo_url TEXT DEFAULT '',
-      cover_url TEXT DEFAULT '',
-      gallery_json TEXT DEFAULT '[]',
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
-  `);
-
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS province TEXT DEFAULT '';
-  `);
-
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS zone TEXT DEFAULT '';
-  `);
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS work_areas TEXT DEFAULT '';
-  `);
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS experience_years TEXT DEFAULT '';
-  `);
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS services_json TEXT DEFAULT '[]';
-  `);
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS work_schedule TEXT DEFAULT '';
-  `);
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS website TEXT DEFAULT '';
-  `);
-
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '';
-  `);
-
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cover_url TEXT DEFAULT '';
-  `);
-
-  await query(`
-    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gallery_json TEXT DEFAULT '[]';
   `);
 
   await query(`
@@ -186,15 +141,17 @@ async function initDb() {
     );
   `);
 
+
   await query(`
     CREATE TABLE IF NOT EXISTS notifications (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       type TEXT NOT NULL,
       title TEXT NOT NULL,
-      body TEXT NOT NULL DEFAULT '',
-      link TEXT NOT NULL DEFAULT '',
-      read_at TIMESTAMP NULL,
+      message TEXT NOT NULL,
+      link TEXT DEFAULT '',
+      data_json TEXT NOT NULL DEFAULT '{}',
+      is_read TEXT NOT NULL DEFAULT 'no',
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `);
@@ -222,23 +179,13 @@ function mapProfile(row) {
     type: row.type,
     name: row.name,
     city: row.city,
-    province: row.province || "",
-    zone: row.zone || "",
-    workAreas: row.work_areas || "",
     industry: row.industry,
-    experienceYears: row.experience_years || "",
-    services: JSON.parse(row.services_json || "[]"),
-    workSchedule: row.work_schedule || "",
     description: row.description,
     phone: row.phone,
-    website: row.website || "",
     email: row.email,
     tags: JSON.parse(row.tags_json || "[]"),
     plan: row.plan,
     verified: row.verified,
-    photoUrl: row.photo_url || "",
-    coverUrl: row.cover_url || "",
-    galleryUrls: (() => { try { return JSON.parse(row.gallery_json || '[]'); } catch { return []; } })(),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -298,14 +245,6 @@ async function enrichProfiles(rows) {
   return output;
 }
 
-async function createNotification(userId, type, title, body = "", link = "") {
-  if (!userId) return;
-  await query(
-    `INSERT INTO notifications (id, user_id, type, title, body, link) VALUES ($1,$2,$3,$4,$5,$6)`,
-    [makeId(), userId, String(type || "info"), String(title || "Notificación"), String(body || ""), String(link || "")]
-  );
-}
-
 
 function normalizeConversationPair(userId1, userId2) {
   return [String(userId1), String(userId2)].sort((a, b) => a.localeCompare(b, 'en'));
@@ -334,6 +273,16 @@ async function conversationAllowed(userId, conversationId) {
     [conversationId, userId]
   );
   return result.rows[0] || null;
+}
+
+
+async function addNotification(userId, type, title, message, link = '', data = {}) {
+  if (!userId) return;
+  await query(
+    `INSERT INTO notifications (id, user_id, type, title, message, link, data_json, is_read)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+    [makeId(), userId, type, title, message, String(link || ''), JSON.stringify(data || {}), 'no']
+  );
 }
 
 app.get("/api/health", async (req, res) => {
@@ -410,11 +359,7 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
   try {
     const profileResult = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
     const profile = profileResult.rows[0] ? mapProfile(profileResult.rows[0]) : null;
-    const notificationStats = await query(
-      `SELECT COUNT(*)::int AS unread_count FROM notifications WHERE user_id = $1 AND read_at IS NULL`,
-      [req.user.id]
-    );
-    res.json({ ok: true, user: sanitizeUser(req.user), profile, notifications: { unreadCount: notificationStats.rows[0]?.unread_count || 0 } });
+    res.json({ ok: true, user: sanitizeUser(req.user), profile });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Error interno" });
@@ -423,94 +368,47 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
 
 app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
   try {
-    const { name, city, province, zone, workAreas, industry, experienceYears, services, workSchedule, description, phone, website, tags, plan, photoUrl, coverUrl, galleryUrls } = req.body || {};
+    const { name, city, industry, description, phone, tags, plan } = req.body || {};
     if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
 
     const existing = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
     const normalizedPlan = plan === "premium" ? "premium" : "free";
     const tagsJson = JSON.stringify(Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : []);
-    const normalizedPhotoUrl = String(photoUrl || "").trim();
-    const normalizedCoverUrl = String(coverUrl || "").trim();
-    const normalizedGalleryUrls = Array.isArray(galleryUrls) ? galleryUrls.map(x => String(x || '').trim()).filter(Boolean) : [];
-    if (normalizedPhotoUrl && !normalizedPhotoUrl.startsWith("data:image/")) {
-      return res.status(400).json({ error: "La foto debe ser una imagen válida" });
-    }
-    if (normalizedCoverUrl && !normalizedCoverUrl.startsWith("data:image/")) {
-      return res.status(400).json({ error: "La portada debe ser una imagen válida" });
-    }
-    if (normalizedPhotoUrl.length > 7_000_000) {
-      return res.status(400).json({ error: "La foto es demasiado pesada" });
-    }
-    if (normalizedCoverUrl.length > 9_000_000) {
-      return res.status(400).json({ error: "La portada es demasiado pesada" });
-    }
-    if (normalizedGalleryUrls.length > 6) {
-      return res.status(400).json({ error: "Podés cargar hasta 6 fotos en la galería" });
-    }
-    for (const img of normalizedGalleryUrls) {
-      if (!img.startsWith('data:image/')) {
-        return res.status(400).json({ error: 'La galería debe contener imágenes válidas' });
-      }
-      if (img.length > 5_500_000) {
-        return res.status(400).json({ error: 'Una imagen de la galería es demasiado pesada' });
-      }
-    }
-    const galleryJson = JSON.stringify(normalizedGalleryUrls);
 
     if (!existing.rows.length) {
       const profileId = makeId();
       await query(
         `INSERT INTO profiles
-         (id, user_id, type, name, city, province, zone, work_areas, industry, experience_years, services_json, work_schedule, description, phone, website, email, tags_json, plan, verified, photo_url, cover_url, gallery_json)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)`,
+         (id, user_id, type, name, city, industry, description, phone, email, tags_json, plan, verified)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
         [
           profileId,
           req.user.id,
           req.user.role,
           String(name).trim(),
           String(city || "").trim(),
-          String(province || "").trim(),
-          String(zone || "").trim(),
-          String(workAreas || "").trim(),
           String(industry || "").trim(),
-          String(experienceYears || "").trim(),
-          JSON.stringify(Array.isArray(services) ? services.map(s => String(s).trim()).filter(Boolean) : []),
-          String(workSchedule || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
-          String(website || "").trim(),
           req.user.email,
           tagsJson,
           normalizedPlan,
-          "no",
-          normalizedPhotoUrl,
-          normalizedCoverUrl,
-          galleryJson
+          "no"
         ]
       );
     } else {
       await query(
         `UPDATE profiles
-         SET name=$1, city=$2, province=$3, zone=$4, work_areas=$5, industry=$6, experience_years=$7, services_json=$8, work_schedule=$9, description=$10, phone=$11, website=$12, tags_json=$13, plan=$14, photo_url=$15, cover_url=$16, gallery_json=$17, updated_at=NOW()
-         WHERE user_id=$18`,
+         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, tags_json=$6, plan=$7, updated_at=NOW()
+         WHERE user_id=$8`,
         [
           String(name).trim(),
           String(city || "").trim(),
-          String(province || "").trim(),
-          String(zone || "").trim(),
-          String(workAreas || "").trim(),
           String(industry || "").trim(),
-          String(experienceYears || "").trim(),
-          JSON.stringify(Array.isArray(services) ? services.map(s => String(s).trim()).filter(Boolean) : []),
-          String(workSchedule || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
-          String(website || "").trim(),
           tagsJson,
           normalizedPlan,
-          normalizedPhotoUrl,
-          normalizedCoverUrl,
-          galleryJson,
           req.user.id
         ]
       );
@@ -530,8 +428,6 @@ app.get("/api/profiles", async (req, res) => {
     const role = String(req.query.role || "").trim().toLowerCase();
     const verified = String(req.query.verified || "").trim().toLowerCase();
     const plan = String(req.query.plan || "").trim().toLowerCase();
-    const province = String(req.query.province || "").trim().toLowerCase();
-    const zone = String(req.query.zone || "").trim().toLowerCase();
     const sort = String(req.query.sort || "destacados").trim().toLowerCase();
     const viewerUserId = String(req.query.viewerUserId || "").trim();
 
@@ -545,14 +441,12 @@ app.get("/api/profiles", async (req, res) => {
     let rows = result.rows;
     if (q) {
       rows = rows.filter(r =>
-        [r.name, r.city, r.province, r.zone, r.work_areas, r.industry, r.experience_years, r.services_json, r.work_schedule, r.description, r.website, r.tags_json].join(" ").toLowerCase().includes(q)
+        [r.name, r.city, r.industry, r.description, r.tags_json].join(" ").toLowerCase().includes(q)
       );
     }
     if (role && role !== "todos") rows = rows.filter(r => r.type === role);
     if (verified === "si" || verified === "no") rows = rows.filter(r => r.verified === verified);
     if (plan === "premium" || plan === "free") rows = rows.filter(r => r.plan === plan);
-    if (province && province !== "todos") rows = rows.filter(r => String(r.province || "").trim().toLowerCase() === province);
-    if (zone && zone !== "todos") rows = rows.filter(r => String(r.zone || "").trim().toLowerCase() === zone);
 
     let favoriteMap = new Set();
     if (viewerUserId) {
@@ -612,19 +506,21 @@ app.post("/api/favorites", authRequired, loadUser, async (req, res) => {
       return res.status(400).json({ error: "No podés guardarte a vos mismo" });
     }
 
-    const insertResult = await query(
+    const favoriteInsert = await query(
       `INSERT INTO favorites (id, user_id, profile_id) VALUES ($1,$2,$3)
-       ON CONFLICT (user_id, profile_id) DO NOTHING`,
+       ON CONFLICT (user_id, profile_id) DO NOTHING
+       RETURNING id`,
       [makeId(), req.user.id, profileId]
     );
 
-    if (insertResult.rowCount > 0) {
-      await createNotification(
+    if (favoriteInsert.rows.length) {
+      await addNotification(
         target.rows[0].user_id,
         'favorite',
         'Nuevo favorito',
         `${req.user.name} guardó tu perfil en favoritos.`,
-        'favoritos'
+        '/?view=favoritos',
+        { profileId }
       );
     }
 
@@ -698,12 +594,13 @@ app.post("/api/reviews", authRequired, loadUser, async (req, res) => {
       [reviewId, req.user.id, targetProfileId, scoreNum, String(comment).trim()]
     );
 
-    await createNotification(
+    await addNotification(
       target.rows[0].user_id,
       'review',
       'Nueva reseña',
-      `${req.user.name} te dejó una reseña de ${scoreNum} estrella${scoreNum === 1 ? '' : 's'}.`,
-      'explorar'
+      `${req.user.name} dejó una reseña de ${scoreNum} estrella${scoreNum === 1 ? '' : 's'} en tu perfil.`,
+      '/?view=perfil',
+      { targetProfileId, score: scoreNum }
     );
 
     res.json({ ok: true });
@@ -821,6 +718,15 @@ app.post("/api/payments/mock-upgrade", authRequired, loadUser, async (req, res) 
        (id, user_id, profile_id, plan, amount, currency, status, provider, external_reference)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [makeId(), req.user.id, profile.id, "premium", 19990, "ARS", "approved_demo", "mercadopago", `demo:${req.user.id}:${Date.now()}`]
+    );
+
+    await addNotification(
+      req.user.id,
+      'plan',
+      'Plan actualizado',
+      'Tu cuenta ahora tiene plan Premium.',
+      '/?view=perfil',
+      { plan: 'premium' }
     );
 
     const updated = await query(`SELECT * FROM profiles WHERE id = $1`, [profile.id]);
@@ -993,13 +899,14 @@ app.post("/api/conversations/:id/messages", authRequired, loadUser, async (req, 
     );
     await query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [req.params.id]);
 
-    const otherUserId = conversation.user_a_id === req.user.id ? conversation.user_b_id : conversation.user_a_id;
-    await createNotification(
-      otherUserId,
+    const receiverUserId = conversation.user_a_id === req.user.id ? conversation.user_b_id : conversation.user_a_id;
+    await addNotification(
+      receiverUserId,
       'message',
-      `Nuevo mensaje de ${req.user.name}`,
-      text.slice(0, 160),
-      `mensajes:${req.params.id}`
+      'Nuevo mensaje',
+      `${req.user.name} te envió un mensaje.`,
+      '/?view=chat&conversationId=' + req.params.id,
+      { conversationId: req.params.id }
     );
 
     res.json({ ok: true });
@@ -1009,27 +916,24 @@ app.post("/api/conversations/:id/messages", authRequired, loadUser, async (req, 
   }
 });
 
-app.get('/api/notifications', authRequired, loadUser, async (req, res) => {
+
+app.get("/api/notifications", authRequired, loadUser, async (req, res) => {
   try {
     const result = await query(
-      `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100`,
-      [req.user.id]
-    );
-    const unread = await query(
-      `SELECT COUNT(*)::int AS c FROM notifications WHERE user_id = $1 AND read_at IS NULL`,
+      `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 50`,
       [req.user.id]
     );
     res.json({
       ok: true,
-      unreadCount: unread.rows[0]?.c || 0,
       notifications: result.rows.map(r => ({
         id: r.id,
         type: r.type,
         title: r.title,
-        body: r.body,
-        link: r.link,
-        readAt: r.read_at,
-        createdAt: r.created_at
+        message: r.message,
+        link: r.link || '',
+        isRead: r.is_read === 'si',
+        createdAt: r.created_at,
+        data: (() => { try { return JSON.parse(r.data_json || '{}'); } catch { return {}; } })()
       }))
     });
   } catch (e) {
@@ -1038,9 +942,9 @@ app.get('/api/notifications', authRequired, loadUser, async (req, res) => {
   }
 });
 
-app.post('/api/notifications/read-all', authRequired, loadUser, async (req, res) => {
+app.post("/api/notifications/:id/read", authRequired, loadUser, async (req, res) => {
   try {
-    await query(`UPDATE notifications SET read_at = NOW() WHERE user_id = $1 AND read_at IS NULL`, [req.user.id]);
+    await query(`UPDATE notifications SET is_read = 'si' WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]);
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -1048,9 +952,9 @@ app.post('/api/notifications/read-all', authRequired, loadUser, async (req, res)
   }
 });
 
-app.post('/api/notifications/:id/read', authRequired, loadUser, async (req, res) => {
+app.post("/api/notifications/read-all", authRequired, loadUser, async (req, res) => {
   try {
-    await query(`UPDATE notifications SET read_at = NOW() WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]);
+    await query(`UPDATE notifications SET is_read = 'si' WHERE user_id = $1 AND is_read = 'no'`, [req.user.id]);
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -1230,22 +1134,24 @@ app.patch("/api/admin/profiles/:id", authRequired, loadUser, adminRequired, asyn
       [newVerified, newPlan, req.params.id]
     );
 
-    if (newVerified !== profile.rows[0].verified) {
-      await createNotification(
+    if (profile.rows[0].verified !== newVerified) {
+      await addNotification(
         profile.rows[0].user_id,
         'verified',
-        newVerified === 'si' ? 'Tu perfil fue verificado' : 'Tu verificación fue actualizada',
-        newVerified === 'si' ? 'Ahora tu perfil muestra el sello de verificado.' : 'Tu perfil ya no figura como verificado.',
-        'miPerfil'
+        newVerified === 'si' ? 'Perfil verificado' : 'Verificación actualizada',
+        newVerified === 'si' ? 'Tu perfil fue verificado.' : 'La verificación de tu perfil fue actualizada.',
+        '/?view=perfil',
+        { verified: newVerified }
       );
     }
-    if (newPlan !== profile.rows[0].plan) {
-      await createNotification(
+    if (profile.rows[0].plan !== newPlan) {
+      await addNotification(
         profile.rows[0].user_id,
         'plan',
-        `Tu plan ahora es ${newPlan === 'premium' ? 'Premium' : 'Free'}`,
-        newPlan === 'premium' ? 'Tu perfil tiene beneficios premium activos.' : 'Tu perfil volvió al plan Free.',
-        'miPerfil'
+        'Plan actualizado',
+        `Tu plan ahora es ${newPlan === 'premium' ? 'Premium' : 'Free'}.`,
+        '/?view=perfil',
+        { plan: newPlan }
       );
     }
 
