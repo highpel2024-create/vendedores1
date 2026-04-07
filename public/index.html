@@ -200,7 +200,44 @@
         </div>
         <div class="form-grid">
           <div><label>Nombre</label><input id="profileName"></div>
-          <div><label>Ciudad</label><input id="profileCity"></div>
+          <div><label>Ciudad</label><input id="profileCity" placeholder="Ej: Luján"></div>
+          <div><label>Provincia</label><select id="profileProvince">
+            <option value="">Seleccionar provincia</option>
+            <option value="Buenos Aires">Buenos Aires</option>
+            <option value="CABA">CABA</option>
+            <option value="Catamarca">Catamarca</option>
+            <option value="Chaco">Chaco</option>
+            <option value="Chubut">Chubut</option>
+            <option value="Córdoba">Córdoba</option>
+            <option value="Corrientes">Corrientes</option>
+            <option value="Entre Ríos">Entre Ríos</option>
+            <option value="Formosa">Formosa</option>
+            <option value="Jujuy">Jujuy</option>
+            <option value="La Pampa">La Pampa</option>
+            <option value="La Rioja">La Rioja</option>
+            <option value="Mendoza">Mendoza</option>
+            <option value="Misiones">Misiones</option>
+            <option value="Neuquén">Neuquén</option>
+            <option value="Río Negro">Río Negro</option>
+            <option value="Salta">Salta</option>
+            <option value="San Juan">San Juan</option>
+            <option value="San Luis">San Luis</option>
+            <option value="Santa Cruz">Santa Cruz</option>
+            <option value="Santa Fe">Santa Fe</option>
+            <option value="Santiago del Estero">Santiago del Estero</option>
+            <option value="Tierra del Fuego">Tierra del Fuego</option>
+            <option value="Tucumán">Tucumán</option>
+          </select></div>
+          <div><label>Zona</label><select id="profileZone">
+            <option value="">Seleccionar zona</option>
+            <option value="Norte">Norte</option>
+            <option value="Sur">Sur</option>
+            <option value="Este">Este</option>
+            <option value="Oeste">Oeste</option>
+            <option value="Centro">Centro</option>
+            <option value="AMBA">AMBA</option>
+            <option value="Interior">Interior</option>
+          </select></div>
           <div><label>Rubro</label><input id="profileIndustry"></div>
           <div><label>Teléfono</label><input id="profilePhone"></div>
           <div><label>Plan</label><select id="profilePlan"><option value="free">Free</option><option value="premium">Premium</option></select></div>
@@ -220,11 +257,49 @@
     <section id="tab-explorar" class="tab-panel hidden">
       <div class="card">
         <div class="toolbar">
-          <div><label>Buscar</label><input id="searchQ" placeholder="nombre, ciudad, rubro..." oninput="loadProfiles()"></div>
+          <div><label>Buscar</label><input id="searchQ" placeholder="nombre, ciudad, provincia, zona o rubro..." oninput="loadProfiles()"></div>
           <div><label>Tipo</label><select id="searchRole" onchange="loadProfiles()"><option value="todos">Todos</option><option value="vendedor">Vendedor</option><option value="empresa">Empresa</option></select></div>
+          <div><label>Provincia</label><select id="searchProvince" onchange="loadProfiles()">
+            <option value="todos">Todas</option>
+            <option value="Buenos Aires">Buenos Aires</option>
+            <option value="CABA">CABA</option>
+            <option value="Catamarca">Catamarca</option>
+            <option value="Chaco">Chaco</option>
+            <option value="Chubut">Chubut</option>
+            <option value="Córdoba">Córdoba</option>
+            <option value="Corrientes">Corrientes</option>
+            <option value="Entre Ríos">Entre Ríos</option>
+            <option value="Formosa">Formosa</option>
+            <option value="Jujuy">Jujuy</option>
+            <option value="La Pampa">La Pampa</option>
+            <option value="La Rioja">La Rioja</option>
+            <option value="Mendoza">Mendoza</option>
+            <option value="Misiones">Misiones</option>
+            <option value="Neuquén">Neuquén</option>
+            <option value="Río Negro">Río Negro</option>
+            <option value="Salta">Salta</option>
+            <option value="San Juan">San Juan</option>
+            <option value="San Luis">San Luis</option>
+            <option value="Santa Cruz">Santa Cruz</option>
+            <option value="Santa Fe">Santa Fe</option>
+            <option value="Santiago del Estero">Santiago del Estero</option>
+            <option value="Tierra del Fuego">Tierra del Fuego</option>
+            <option value="Tucumán">Tucumán</option>
+          </select></div>
+          <div><label>Zona</label><select id="searchZone" onchange="loadProfiles()">
+            <option value="todos">Todas</option>
+            <option value="Norte">Norte</option>
+            <option value="Sur">Sur</option>
+            <option value="Este">Este</option>
+            <option value="Oeste">Oeste</option>
+            <option value="Centro">Centro</option>
+            <option value="AMBA">AMBA</option>
+            <option value="Interior">Interior</option>
+          </select></div>
           <div><label>Verificado</label><select id="searchVerified" onchange="loadProfiles()"><option value="todos">Todos</option><option value="si">Sí</option><option value="no">No</option></select></div>
           <div><label>Plan</label><select id="searchPlan" onchange="loadProfiles()"><option value="todos">Todos</option><option value="premium">Premium</option><option value="free">Free</option></select></div>
           <div><label>Ordenar</label><select id="searchSort" onchange="loadProfiles()"><option value="destacados">Destacados</option><option value="mejor_puntuados">Mejor puntuados</option><option value="mas_recientes">Más recientes</option><option value="alfabetico">A-Z</option></select></div>
+          <div style="display:flex;align-items:end"><button class="btn" onclick="clearSearchFilters()">Limpiar filtros</button></div>
         </div>
       </div>
       <div style="height:16px"></div>
@@ -887,6 +962,8 @@ async function loadMe() {
 function fillMyProfile() {
   document.getElementById("profileName").value = currentProfile?.name || "";
   document.getElementById("profileCity").value = currentProfile?.city || "";
+  document.getElementById("profileProvince").value = currentProfile?.province || "";
+  document.getElementById("profileZone").value = currentProfile?.zone || "";
   document.getElementById("profileIndustry").value = currentProfile?.industry || "";
   document.getElementById("profilePhone").value = currentProfile?.phone || "";
   document.getElementById("profilePlan").value = currentProfile?.plan || "free";
@@ -912,6 +989,8 @@ async function saveMyProfile() {
       body: JSON.stringify({
         name: document.getElementById("profileName").value.trim(),
         city: document.getElementById("profileCity").value.trim(),
+        province: document.getElementById("profileProvince").value.trim(),
+        zone: document.getElementById("profileZone").value.trim(),
         industry: document.getElementById("profileIndustry").value.trim(),
         phone: document.getElementById("profilePhone").value.trim(),
         plan: document.getElementById("profilePlan").value,
@@ -964,9 +1043,11 @@ async function loadProfiles() {
     const role = encodeURIComponent(document.getElementById("searchRole")?.value || "todos");
     const verified = encodeURIComponent(document.getElementById("searchVerified")?.value || "todos");
     const plan = encodeURIComponent(document.getElementById("searchPlan")?.value || "todos");
+    const province = encodeURIComponent(document.getElementById("searchProvince")?.value || "todos");
+    const zone = encodeURIComponent(document.getElementById("searchZone")?.value || "todos");
     const sort = encodeURIComponent(document.getElementById("searchSort")?.value || "destacados");
     const viewerUserId = encodeURIComponent(currentUser?.id || "");
-    const data = await api(`/api/profiles?q=${q}&role=${role}&verified=${verified}&plan=${plan}&sort=${sort}&viewerUserId=${viewerUserId}`);
+    const data = await api(`/api/profiles?q=${q}&role=${role}&verified=${verified}&plan=${plan}&province=${province}&zone=${zone}&sort=${sort}&viewerUserId=${viewerUserId}`);
     profilesCache = data.profiles;
     renderProfiles();
     renderHome();
@@ -974,8 +1055,30 @@ async function loadProfiles() {
   } catch (e) { console.error(e); }
 }
 
+function clearSearchFilters() {
+  const ids = {
+    searchQ: "",
+    searchRole: "todos",
+    searchProvince: "todos",
+    searchZone: "todos",
+    searchVerified: "todos",
+    searchPlan: "todos",
+    searchSort: "destacados"
+  };
+  Object.entries(ids).forEach(([id, value]) => {
+    const el = document.getElementById(id);
+    if (el) el.value = value;
+  });
+  loadProfiles();
+}
+
 function metricCard(value, label) {
   return `<div class="card metric"><div class="value">${value}</div><div class="label">${label}</div></div>`;
+}
+
+function formatLocation(p) {
+  const parts = [p?.city || "", p?.province || ""].map(x => String(x || "").trim()).filter(Boolean);
+  return esc(parts.length ? parts.join(", ") : "Sin ubicación");
 }
 
 function renderHome() {
@@ -1001,7 +1104,7 @@ function renderHome() {
           ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
           <div>
             <strong>${esc(p.name)}</strong>
-            <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")}</div>
+            <div class="small muted">${formatLocation(p)} · ${esc(p.industry || "Sin rubro")}</div>
           </div>
         </div>
         <div class="row">
@@ -1036,7 +1139,7 @@ function renderProfiles() {
             <span class="badge ${p.type === "vendedor" ? "type-vendedor" : "type-empresa"}">${esc(p.type)}</span>
             <span class="badge premium">${esc(p.plan)}</span>
             ${p.verified === "si" ? `<span class="badge verified">verificado</span>` : ``}
-            <span class="pill">${esc(p.city || "Sin ciudad")}</span>
+            <span class="pill">${formatLocation(p)}</span>
             <span class="pill">${esc(p.industry || "Sin rubro")}</span>
             </div>
           </div>
@@ -1047,6 +1150,7 @@ function renderProfiles() {
       <div>${esc(p.description || "Sin descripción")}</div>
       ${(Array.isArray(p.galleryUrls) && p.galleryUrls.length) ? `<div class="work-gallery">${p.galleryUrls.slice(0,6).map(img => `<img src="${esc(img)}" alt="Trabajo de ${esc(p.name)}">`).join("")}</div>` : ``}
       <div style="height:8px"></div>
+      <div class="small muted">Ubicación: ${formatLocation(p)}${p.zone ? ` · Zona ${esc(p.zone)}` : ""}</div>
       <div class="small muted">Contacto: ${esc(p.email || "")} ${p.phone ? `· ${esc(p.phone)}` : ""}</div>
       <div class="row" style="margin-top:10px">
         ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
@@ -1139,7 +1243,7 @@ function renderFavorites() {
         ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
         <div>
           <strong>${esc(p.name)}</strong>
-          <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
+          <div class="small muted">${formatLocation(p)} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
         </div>
       </div>
       <div style="margin-top:8px">${esc(p.description || "Sin descripción")}</div>
