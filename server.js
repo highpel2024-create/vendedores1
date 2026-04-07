@@ -24,7 +24,7 @@ const pool = new Pool({
     : false
 });
 
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ limit: "2mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 function makeId() {
@@ -59,8 +59,6 @@ async function initDb() {
       description TEXT DEFAULT '',
       phone TEXT DEFAULT '',
       email TEXT DEFAULT '',
-      profile_photo TEXT DEFAULT '',
-      cover_photo TEXT DEFAULT '',
       tags_json TEXT DEFAULT '[]',
       plan TEXT NOT NULL DEFAULT 'free',
       verified TEXT NOT NULL DEFAULT 'no',
@@ -69,30 +67,8 @@ async function initDb() {
     );
   `);
 
-
-await query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS profile_photo TEXT DEFAULT ''`);
-await query(`ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cover_photo TEXT DEFAULT ''`);
-
-await query(`
-  CREATE TABLE IF NOT EXISTS notifications (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    actor_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
-    type TEXT NOT NULL,
-    title TEXT NOT NULL,
-    body TEXT NOT NULL,
-    link TEXT DEFAULT '',
-    is_read BOOLEAN NOT NULL DEFAULT FALSE,
-    meta_json TEXT NOT NULL DEFAULT '{}',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
-  );
-`);
-
-await query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC)`);
-await query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read)`);
-
-await query(`
-  CREATE TABLE IF NOT EXISTS reviews (
+  await query(`
+    CREATE TABLE IF NOT EXISTS reviews (
       id TEXT PRIMARY KEY,
       author_user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       target_profile_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -165,6 +141,23 @@ await query(`
     );
   `);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      actor_user_id TEXT NULL REFERENCES users(id) ON DELETE SET NULL,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      message TEXT NOT NULL,
+      meta_json TEXT NOT NULL DEFAULT '{}',
+      is_read BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_created ON notifications(user_id, created_at DESC);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_notifications_user_unread ON notifications(user_id, is_read);`);
+
   const adminEmail = "admin@demo.com";
   const existing = await query(`SELECT id FROM users WHERE email = $1 LIMIT 1`, [adminEmail]);
   if (!existing.rows.length) {
@@ -192,14 +185,55 @@ function mapProfile(row) {
     description: row.description,
     phone: row.phone,
     email: row.email,
-    profilePhoto: row.profile_photo || "",
-    coverPhoto: row.cover_photo || "",
     tags: JSON.parse(row.tags_json || "[]"),
     plan: row.plan,
     verified: row.verified,
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
+}
+
+
+function safeJsonParse(value, fallback) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+async function getProfileByUserId(userId) {
+  const result = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [userId]);
+  return result.rows[0] || null;
+}
+
+async function createNotification({ userId, actorUserId = null, type, title, message, meta = {} }) {
+  if (!userId || !type || !title || !message) return null;
+  const id = makeId();
+  await query(
+    `INSERT INTO notifications (id, user_id, actor_user_id, type, title, message, meta_json)
+     VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+    [id, userId, actorUserId, type, title, message, JSON.stringify(meta || {})]
+  );
+  return id;
+}
+
+function buildProfileChangedFields(previousProfile, nextProfile, tagsJson) {
+  if (!previousProfile || !nextProfile) return [];
+  const changes = [];
+  const checks = [
+    ['name', 'nombre'],
+    ['city', 'ciudad'],
+    ['industry', 'rubro'],
+    ['description', 'descripción'],
+    ['phone', 'teléfono'],
+    ['plan', 'plan'],
+  ];
+  for (const [key, label] of checks) {
+    if (String(previousProfile[key] || '').trim() !== String(nextProfile[key] || '').trim()) changes.push(label);
+  }
+  if (String(previousProfile.tags_json || '[]') !== String(tagsJson || '[]')) changes.push('etiquetas');
+  return changes;
 }
 
 function authRequired(req, res, next) {
@@ -256,40 +290,6 @@ async function enrichProfiles(rows) {
   return output;
 }
 
-
-
-
-function normalizeImageDataUrl(value) {
-  const text = String(value || "").trim();
-  if (!text) return "";
-  if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,/i.test(text)) return text;
-  if (/^https?:\/\//i.test(text)) return text;
-  return "";
-}
-
-function diffProfileFields(beforeRow, afterRow) {
-  const fields = [];
-  if ((beforeRow?.name || "") !== (afterRow?.name || "")) fields.push("nombre");
-  if ((beforeRow?.city || "") !== (afterRow?.city || "")) fields.push("ciudad");
-  if ((beforeRow?.industry || "") !== (afterRow?.industry || "")) fields.push("rubro");
-  if ((beforeRow?.description || "") !== (afterRow?.description || "")) fields.push("descripción");
-  if ((beforeRow?.phone || "") !== (afterRow?.phone || "")) fields.push("teléfono");
-  if ((beforeRow?.profile_photo || "") !== (afterRow?.profile_photo || "")) fields.push("foto de perfil");
-  if ((beforeRow?.cover_photo || "") !== (afterRow?.cover_photo || "")) fields.push("foto de portada");
-  if ((beforeRow?.tags_json || "[]") !== (afterRow?.tags_json || "[]")) fields.push("etiquetas");
-  return fields;
-}
-
-async function createNotification({ userId, actorUserId = null, type, title, body, link = "", meta = {} }) {
-  if (!userId || !type || !title || !body) return null;
-  const id = makeId();
-  await query(
-    `INSERT INTO notifications (id, user_id, actor_user_id, type, title, body, link, meta_json)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-    [id, userId, actorUserId, type, title, body, link, JSON.stringify(meta || {})]
-  );
-  return id;
-}
 
 function normalizeConversationPair(userId1, userId2) {
   return [String(userId1), String(userId2)].sort((a, b) => a.localeCompare(b, 'en'));
@@ -401,96 +401,97 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
   }
 });
 
-
 app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
   try {
-    const { name, city, industry, description, phone, tags, plan, profilePhoto, coverPhoto } = req.body || {};
+    const { name, city, industry, description, phone, tags, plan } = req.body || {};
     if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
 
     const existing = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
-    const previous = existing.rows[0] || null;
+    const existingProfile = existing.rows[0] || null;
     const normalizedPlan = plan === "premium" ? "premium" : "free";
+    const cleanPayload = {
+      name: String(name).trim(),
+      city: String(city || "").trim(),
+      industry: String(industry || "").trim(),
+      description: String(description || "").trim(),
+      phone: String(phone || "").trim(),
+      plan: normalizedPlan
+    };
     const tagsJson = JSON.stringify(Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : []);
-    const safeProfilePhoto = normalizeImageDataUrl(profilePhoto);
-    const safeCoverPhoto = normalizeImageDataUrl(coverPhoto);
 
-    if (!previous) {
+    if (!existingProfile) {
       const profileId = makeId();
       await query(
         `INSERT INTO profiles
-         (id, user_id, type, name, city, industry, description, phone, email, profile_photo, cover_photo, tags_json, plan, verified)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+         (id, user_id, type, name, city, industry, description, phone, email, tags_json, plan, verified)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
         [
           profileId,
           req.user.id,
           req.user.role,
-          String(name).trim(),
-          String(city || "").trim(),
-          String(industry || "").trim(),
-          String(description || "").trim(),
-          String(phone || "").trim(),
+          cleanPayload.name,
+          cleanPayload.city,
+          cleanPayload.industry,
+          cleanPayload.description,
+          cleanPayload.phone,
           req.user.email,
-          safeProfilePhoto,
-          safeCoverPhoto,
           tagsJson,
-          normalizedPlan,
+          cleanPayload.plan,
           "no"
         ]
       );
     } else {
       await query(
         `UPDATE profiles
-         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, profile_photo=$6, cover_photo=$7, tags_json=$8, plan=$9, updated_at=NOW()
-         WHERE user_id=$10`,
+         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, tags_json=$6, plan=$7, updated_at=NOW()
+         WHERE user_id=$8`,
         [
-          String(name).trim(),
-          String(city || "").trim(),
-          String(industry || "").trim(),
-          String(description || "").trim(),
-          String(phone || "").trim(),
-          safeProfilePhoto || previous.profile_photo || "",
-          safeCoverPhoto || previous.cover_photo || "",
+          cleanPayload.name,
+          cleanPayload.city,
+          cleanPayload.industry,
+          cleanPayload.description,
+          cleanPayload.phone,
           tagsJson,
-          normalizedPlan,
+          cleanPayload.plan,
           req.user.id
         ]
       );
     }
 
     const profileResult = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
-    const saved = profileResult.rows[0];
-    const changedFields = diffProfileFields(previous, saved);
+    const savedProfile = profileResult.rows[0];
 
-    if (previous && changedFields.length) {
-      const followers = await query(`
-        SELECT DISTINCT p.user_id
-        FROM favorites f
-        INNER JOIN profiles p ON p.id = f.profile_id
-        WHERE f.profile_id = $1 AND p.user_id <> $2
-      `, [saved.id, req.user.id]);
-
-      for (const row of followers.rows) {
-        await createNotification({
-          userId: row.user_id,
-          actorUserId: req.user.id,
-          type: "favorite_profile_updated",
-          title: "Un favorito actualizó su perfil",
-          body: `${saved.name} actualizó ${changedFields.slice(0, 3).join(", ")}${changedFields.length > 3 ? " y más" : ""}.`,
-          link: "/?tab=explorar",
-          meta: { profileId: saved.id, changedFields }
-        });
+    if (existingProfile) {
+      const changedFields = buildProfileChangedFields(existingProfile, savedProfile, tagsJson);
+      if (changedFields.length) {
+        const followers = await query(
+          `SELECT DISTINCT user_id FROM favorites WHERE profile_id = $1 AND user_id <> $2`,
+          [savedProfile.id, req.user.id]
+        );
+        for (const follower of followers.rows) {
+          await createNotification({
+            userId: follower.user_id,
+            actorUserId: req.user.id,
+            type: 'favorite_profile_updated',
+            title: 'Un favorito actualizó su perfil',
+            message: `${savedProfile.name} actualizó su perfil`,
+            meta: {
+              profileId: savedProfile.id,
+              changedFields
+            }
+          });
+        }
       }
     }
 
-    res.json({ ok: true, profile: mapProfile(saved) });
+    res.json({ ok: true, profile: mapProfile(savedProfile) });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Error interno" });
   }
 });
 
-app.get("/api/profiles"
-, async (req, res) => {
+app.get("/api/profiles", async (req, res) => {
   try {
     const q = String(req.query.q || "").trim().toLowerCase();
     const role = String(req.query.role || "").trim().toLowerCase();
@@ -582,14 +583,17 @@ app.post("/api/favorites", authRequired, loadUser, async (req, res) => {
     );
 
     if (insertResult.rows.length) {
+      const actorProfile = await getProfileByUserId(req.user.id);
       await createNotification({
         userId: target.rows[0].user_id,
         actorUserId: req.user.id,
-        type: "added_to_favorites",
-        title: "Te guardaron en favoritos",
-        body: `${req.user.name} guardó tu perfil en favoritos.`,
-        link: "/?tab=favoritos",
-        meta: { profileId }
+        type: 'added_to_favorites',
+        title: 'Te guardaron en favoritos',
+        message: `${actorProfile?.name || req.user.name} te guardó en favoritos`,
+        meta: {
+          profileId: target.rows[0].id,
+          actorProfileId: actorProfile?.id || null
+        }
       });
     }
 
@@ -951,17 +955,104 @@ app.post("/api/conversations/:id/messages", authRequired, loadUser, async (req, 
     );
     await query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [req.params.id]);
 
-    const recipientUserId = conversation.user_a_id === req.user.id ? conversation.user_b_id : conversation.user_a_id;
+    const receiverUserId = conversation.user_a_id === req.user.id ? conversation.user_b_id : conversation.user_a_id;
+    const senderProfile = await getProfileByUserId(req.user.id);
     await createNotification({
-      userId: recipientUserId,
+      userId: receiverUserId,
       actorUserId: req.user.id,
-      type: "new_message",
-      title: "Nuevo mensaje",
-      body: `${req.user.name} te envió un mensaje.`,
-      link: "/?tab=mensajes&conversationId=" + req.params.id,
-      meta: { conversationId: req.params.id, messageId }
+      type: 'new_message',
+      title: 'Nuevo mensaje',
+      message: `${senderProfile?.name || req.user.name} te envió un mensaje`,
+      meta: {
+        conversationId: req.params.id,
+        messageId,
+        senderUserId: req.user.id
+      }
     });
 
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+
+app.get("/api/notifications", authRequired, loadUser, async (req, res) => {
+  try {
+    const type = String(req.query.type || '').trim();
+    const unreadOnly = String(req.query.unreadOnly || '').trim() === 'true';
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 100);
+    const params = [req.user.id];
+    let where = `WHERE n.user_id = $1`;
+    if (type && type !== 'all') {
+      params.push(type);
+      where += ` AND n.type = $${params.length}`;
+    }
+    if (unreadOnly) where += ` AND n.is_read = FALSE`;
+
+    params.push(limit);
+    const result = await query(
+      `SELECT n.*, u.name AS actor_name
+       FROM notifications n
+       LEFT JOIN users u ON u.id = n.actor_user_id
+       ${where}
+       ORDER BY n.created_at DESC
+       LIMIT $${params.length}`,
+      params
+    );
+
+    res.json({
+      ok: true,
+      notifications: result.rows.map(r => ({
+        id: r.id,
+        userId: r.user_id,
+        actorUserId: r.actor_user_id,
+        actorName: r.actor_name || '',
+        type: r.type,
+        title: r.title,
+        message: r.message,
+        isRead: r.is_read,
+        createdAt: r.created_at,
+        meta: safeJsonParse(r.meta_json || '{}', {})
+      }))
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.get("/api/notifications/unread-count", authRequired, loadUser, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT COUNT(*)::int AS count FROM notifications WHERE user_id = $1 AND is_read = FALSE`,
+      [req.user.id]
+    );
+    res.json({ ok: true, count: result.rows[0]?.count || 0 });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.patch("/api/notifications/read-all", authRequired, loadUser, async (req, res) => {
+  try {
+    await query(`UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE`, [req.user.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.patch("/api/notifications/:id/read", authRequired, loadUser, async (req, res) => {
+  try {
+    const result = await query(
+      `UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2 RETURNING id`,
+      [req.params.id, req.user.id]
+    );
+    if (!result.rows.length) return res.status(404).json({ error: 'Notificación no encontrada' });
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -1175,78 +1266,6 @@ app.delete("/api/admin/users/:id", authRequired, loadUser, adminRequired, async 
       return res.status(400).json({ error: "No podés borrar tu propio usuario admin" });
     }
     await query(`DELETE FROM users WHERE id = $1`, [req.params.id]);
-    res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error interno" });
-  }
-});
-
-
-app.get("/api/notifications", authRequired, loadUser, async (req, res) => {
-  try {
-    const type = String(req.query.type || "").trim();
-    const unreadOnly = String(req.query.unreadOnly || "").trim() === "true";
-    const params = [req.user.id];
-    let sql = `SELECT * FROM notifications WHERE user_id = $1`;
-    if (type) {
-      params.push(type);
-      sql += ` AND type = $${params.length}`;
-    }
-    if (unreadOnly) {
-      sql += ` AND is_read = false`;
-    }
-    sql += ` ORDER BY created_at DESC LIMIT 100`;
-
-    const result = await query(sql, params);
-    res.json({
-      ok: true,
-      notifications: result.rows.map(r => ({
-        id: r.id,
-        type: r.type,
-        title: r.title,
-        body: r.body,
-        link: r.link || "",
-        isRead: !!r.is_read,
-        createdAt: r.created_at,
-        meta: (() => { try { return JSON.parse(r.meta_json || "{}"); } catch { return {}; } })()
-      }))
-    });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error interno" });
-  }
-});
-
-app.get("/api/notifications/unread-count", authRequired, loadUser, async (req, res) => {
-  try {
-    const result = await query(
-      `SELECT COUNT(*)::int AS count FROM notifications WHERE user_id = $1 AND is_read = false`,
-      [req.user.id]
-    );
-    res.json({ ok: true, count: result.rows[0]?.count || 0 });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error interno" });
-  }
-});
-
-app.patch("/api/notifications/read-all", authRequired, loadUser, async (req, res) => {
-  try {
-    await query(`UPDATE notifications SET is_read = true WHERE user_id = $1 AND is_read = false`, [req.user.id]);
-    res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: "Error interno" });
-  }
-});
-
-app.patch("/api/notifications/:id/read", authRequired, loadUser, async (req, res) => {
-  try {
-    await query(
-      `UPDATE notifications SET is_read = true WHERE id = $1 AND user_id = $2`,
-      [req.params.id, req.user.id]
-    );
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
