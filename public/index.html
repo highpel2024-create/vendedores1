@@ -37,12 +37,29 @@
     .bubble.me{margin-left:auto;background:rgba(34,197,94,.12)} .bubble.other{background:rgba(255,255,255,.05)}
     .unread-dot{display:inline-flex;min-width:22px;height:22px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:var(--accent);color:#052e16;font-size:12px;font-weight:bold}
     .chat-compose{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
-    .icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:#172033;color:var(--text);cursor:pointer;font-size:20px}
-    .notif-badge{position:absolute;top:-6px;right:-6px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:var(--danger);color:#fff;font-size:11px;font-weight:bold;display:flex;align-items:center;justify-content:center}
-    .notif-wrap{position:relative}.notif-panel{position:absolute;right:0;top:56px;width:380px;max-height:70vh;overflow:hidden;background:rgba(11,18,32,.98);border:1px solid rgba(255,255,255,.08);border-radius:20px;box-shadow:var(--shadow);z-index:50}.notif-head{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
-    .notif-filters{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06)}.notif-list{max-height:52vh;overflow:auto;padding:10px}.notif-item{padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.03);margin-bottom:10px;cursor:pointer}.notif-item.unread{background:rgba(56,189,248,.09);border-color:rgba(56,189,248,.22)}
-    .notif-toast-wrap{position:fixed;top:18px;right:18px;display:flex;flex-direction:column;gap:10px;z-index:90}.notif-toast{width:min(360px,calc(100vw - 24px));background:#111827;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;box-shadow:var(--shadow);cursor:pointer}.notif-toast-title{font-weight:bold;margin-bottom:5px}
-    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}.notif-panel{width:min(92vw,380px)}}
+    
+.topbar-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.notif-wrap{position:relative}
+.notif-bell{position:relative;min-width:48px}
+.notif-count{position:absolute;top:-8px;right:-6px;background:#ef4444;color:#fff;border-radius:999px;min-width:22px;height:22px;padding:0 6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
+.notif-panel{position:absolute;right:0;top:56px;width:360px;max-width:90vw;background:#0b1220;border:1px solid rgba(255,255,255,.1);border-radius:18px;box-shadow:var(--shadow);z-index:50;overflow:hidden}
+.notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.notif-list{max-height:420px;overflow:auto}
+.notif-item{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.06);cursor:pointer}
+.notif-item.unread{background:rgba(56,189,248,.08)}
+.notif-item:hover{background:rgba(255,255,255,.05)}
+.notif-item-title{font-weight:bold;margin-bottom:4px}
+.notif-toast{position:fixed;top:18px;right:18px;background:#111827;color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 16px;min-width:280px;max-width:360px;box-shadow:var(--shadow);z-index:80;cursor:pointer}
+.profile-cover{height:120px;border-radius:16px;background:linear-gradient(135deg,rgba(56,189,248,.14),rgba(139,92,246,.14),rgba(34,197,94,.14));overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+.profile-cover img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-avatar{width:86px;height:86px;border-radius:50%;overflow:hidden;border:3px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:28px}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.profile-head{display:flex;gap:14px;align-items:flex-end;margin-top:-34px;padding:0 12px}
+.upload-box{padding:12px;border:1px dashed rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.03)}
+.upload-preview{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+.upload-preview img{border-radius:12px;border:1px solid rgba(255,255,255,.08);object-fit:cover}
+
+    @media (max-width:980px){.grid-2,.grid-3,.grid-4,.form-grid,.form-grid-3,.toolbar,.chat-layout,.chat-compose{grid-template-columns:1fr}.notif-panel{right:auto;left:0}.profile-head{align-items:center;margin-top:12px;padding:0}}
   </style>
 </head>
 <body>
@@ -91,21 +108,25 @@
           <strong id="welcomeText">Bienvenido</strong>
           <div class="small muted" id="roleText"></div>
         </div>
-        <div class="row">
-          <div id="notificationWrap" class="notif-wrap hidden">
-            <button id="notifBellBtn" class="icon-btn" onclick="toggleNotificationsPanel()" title="Notificaciones">🔔<span id="notifBadge" class="notif-badge hidden">0</span></button>
-            <div id="notifPanel" class="notif-panel hidden">
-              <div class="notif-head">
+        <div class="topbar-actions">
+          <div class="notif-wrap">
+            <button class="btn notif-bell" onclick="toggleNotifications()">🔔 <span id="notifCount" class="notif-count hidden">0</span></button>
+            <div id="notificationsPanel" class="notif-panel hidden">
+              <div class="notif-header">
                 <strong>Notificaciones</strong>
-                <button class="btn" onclick="markAllNotificationsRead()">Marcar todas</button>
+                <div class="row">
+                  <select id="notifFilter" onchange="loadNotifications()">
+                    <option value="">Todas</option>
+                    <option value="new_message">Mensajes</option>
+                    <option value="added_to_favorites">Favoritos</option>
+                    <option value="favorite_profile_updated">Actualizaciones</option>
+                  </select>
+                  <button class="btn" onclick="markAllNotificationsRead()">Marcar todas</button>
+                </div>
               </div>
-              <div class="notif-filters">
-                <button class="btn active-filter" id="notifFilter-all" onclick="setNotificationFilter('all')">Todas</button>
-                <button class="btn" id="notifFilter-new_message" onclick="setNotificationFilter('new_message')">Mensajes</button>
-                <button class="btn" id="notifFilter-added_to_favorites" onclick="setNotificationFilter('added_to_favorites')">Favoritos</button>
-                <button class="btn" id="notifFilter-favorite_profile_updated" onclick="setNotificationFilter('favorite_profile_updated')">Perfiles</button>
+              <div id="notificationsList" class="notif-list">
+                <div class="empty">No hay notificaciones.</div>
               </div>
-              <div id="notificationsList" class="notif-list"><div class="empty">No hay notificaciones.</div></div>
             </div>
           </div>
           <button class="btn" onclick="loadProfiles()">Actualizar</button>
@@ -145,6 +166,21 @@
         </div>
         <div style="height:10px"></div>
         <div><label>Descripción</label><textarea id="profileDescription"></textarea></div>
+        <div style="height:12px"></div>
+        <div class="grid grid-2">
+          <div class="upload-box">
+            <label>Foto de perfil</label>
+            <input id="profilePhotoInput" type="file" accept="image/*" onchange="handleProfileImageUpload('profilePhotoInput','profilePhotoPreview','profilePhotoHidden',true)">
+            <input id="profilePhotoHidden" type="hidden">
+            <div id="profilePhotoPreview" class="upload-preview"></div>
+          </div>
+          <div class="upload-box">
+            <label>Foto de portada</label>
+            <input id="coverPhotoInput" type="file" accept="image/*" onchange="handleProfileImageUpload('coverPhotoInput','coverPhotoPreview','coverPhotoHidden',false)">
+            <input id="coverPhotoHidden" type="hidden">
+            <div id="coverPhotoPreview" class="upload-preview"></div>
+          </div>
+        </div>
         <div style="height:12px"></div>
         <div class="row">
           <button class="btn btn-primary" onclick="saveMyProfile()">Guardar perfil</button>
@@ -238,8 +274,7 @@
     </section>
   </div>
 </div>
-
-<div id="notificationToasts" class="notif-toast-wrap"></div>
+<div id="notificationToast" class="notif-toast hidden"></div>
 
 <script>
 let token = localStorage.getItem("rve_online_token") || "";
@@ -251,10 +286,8 @@ let conversationsCache = [];
 let activeConversationId = "";
 let messagesCache = [];
 let notificationsCache = [];
-let notificationFilter = 'all';
 let notificationsUnreadCount = 0;
-let notificationPollTimer = null;
-let shownToastIds = new Set();
+let lastToastNotificationId = "";
 
 function authHeaders() {
   return token ? { "Authorization": "Bearer " + token, "Content-Type": "application/json" } : { "Content-Type": "application/json" };
@@ -275,6 +308,47 @@ function formatMoney(amount, currency = "ARS") {
 }
 function normalizePhone(phone) {
   return String(phone || "").replace(/[^\d]/g, "");
+}
+
+function profileInitial(name) {
+  return esc(String(name || "?").trim().charAt(0).toUpperCase() || "?");
+}
+function renderAvatar(profile, size = 86) {
+  if (profile?.profilePhoto) {
+    return `<div class="profile-avatar" style="width:${size}px;height:${size}px"><img src="${esc(profile.profilePhoto)}" alt="foto de perfil"></div>`;
+  }
+  return `<div class="profile-avatar" style="width:${size}px;height:${size}px">${profileInitial(profile?.name)}</div>`;
+}
+function renderCover(profile, height = 120) {
+  if (profile?.coverPhoto) {
+    return `<div class="profile-cover" style="height:${height}px"><img src="${esc(profile.coverPhoto)}" alt="foto de portada"></div>`;
+  }
+  return `<div class="profile-cover" style="height:${height}px"></div>`;
+}
+function setUploadPreview(containerId, imageDataUrl, isAvatar) {
+  const box = document.getElementById(containerId);
+  if (!box) return;
+  if (!imageDataUrl) {
+    box.innerHTML = `<div class="small muted">Sin imagen cargada.</div>`;
+    return;
+  }
+  box.innerHTML = isAvatar
+    ? `<img src="${esc(imageDataUrl)}" alt="preview" style="width:90px;height:90px;border-radius:50%">`
+    : `<img src="${esc(imageDataUrl)}" alt="preview" style="width:100%;max-width:260px;height:110px">`;
+}
+function handleProfileImageUpload(inputId, previewId, hiddenId, isAvatar) {
+  const input = document.getElementById(inputId);
+  const hidden = document.getElementById(hiddenId);
+  const file = input?.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return alert("Elegí una imagen válida.");
+  const reader = new FileReader();
+  reader.onload = () => {
+    const value = String(reader.result || "");
+    hidden.value = value;
+    setUploadPreview(previewId, value, isAvatar);
+  };
+  reader.readAsDataURL(file);
 }
 function showGuest(){ document.getElementById("guestView").classList.remove("hidden"); document.getElementById("appView").classList.add("hidden"); }
 function showApp(){ document.getElementById("guestView").classList.add("hidden"); document.getElementById("appView").classList.remove("hidden"); }
@@ -328,12 +402,8 @@ function logout() {
   messagesCache = [];
   notificationsCache = [];
   notificationsUnreadCount = 0;
-  shownToastIds = new Set();
-  if (notificationPollTimer) clearInterval(notificationPollTimer);
-  notificationPollTimer = null;
+  lastToastNotificationId = "";
   localStorage.removeItem("rve_online_token");
-  renderNotifications();
-  updateNotificationBadge();
   showGuest();
 }
 
@@ -347,154 +417,15 @@ async function loadMe() {
     document.getElementById("adminTabBtn").classList.toggle("hidden", currentUser.role !== "admin");
     document.getElementById("favoritesTabBtn").classList.toggle("hidden", !token);
     document.getElementById("messagesTabBtn").classList.toggle("hidden", !token);
-    document.getElementById("notificationWrap").classList.toggle("hidden", !token);
     fillMyProfile();
     showApp();
     await loadProfiles();
     await loadConversations();
-    await refreshNotifications(true);
+    await loadNotifications();
+    await loadNotificationCount();
     startNotificationPolling();
     if (currentUser.role === "admin") await loadAdmin();
   } catch { logout(); }
-}
-
-
-function updateNotificationBadge() {
-  const badge = document.getElementById('notifBadge');
-  if (!badge) return;
-  badge.textContent = String(notificationsUnreadCount || 0);
-  badge.classList.toggle('hidden', !notificationsUnreadCount);
-}
-
-function renderNotifications() {
-  const box = document.getElementById('notificationsList');
-  if (!box) return;
-  const items = notificationFilter === 'all' ? notificationsCache : notificationsCache.filter(n => n.type === notificationFilter);
-  ['all', 'new_message', 'added_to_favorites', 'favorite_profile_updated'].forEach(type => {
-    document.getElementById('notifFilter-' + type)?.classList.toggle('active-filter', notificationFilter === type);
-  });
-  if (!items.length) {
-    box.innerHTML = '<div class="empty">No hay notificaciones.</div>';
-    return;
-  }
-  box.innerHTML = items.map(n => `
-    <div class="notif-item ${n.isRead ? '' : 'unread'}" onclick="openNotification('${n.id}')">
-      <div class="item-top">
-        <div><strong>${esc(n.title)}</strong></div>
-        ${n.isRead ? '' : '<span class="badge">Nueva</span>'}
-      </div>
-      <div class="small" style="margin-top:6px">${esc(n.message)}</div>
-      ${n.meta?.changedFields?.length ? `<div class="small muted" style="margin-top:6px">Cambios: ${esc(n.meta.changedFields.join(', '))}</div>` : ''}
-      <div class="small muted" style="margin-top:8px">${new Date(n.createdAt).toLocaleString('es-AR')}</div>
-    </div>
-  `).join('');
-}
-
-function toggleNotificationsPanel(forceOpen = null) {
-  const panel = document.getElementById('notifPanel');
-  if (!panel) return;
-  const shouldOpen = forceOpen === null ? panel.classList.contains('hidden') : Boolean(forceOpen);
-  panel.classList.toggle('hidden', !shouldOpen);
-  if (shouldOpen) refreshNotifications(true);
-}
-
-function setNotificationFilter(type) {
-  notificationFilter = type || 'all';
-  renderNotifications();
-}
-
-async function refreshNotifications(skipToast = false) {
-  if (!token) return;
-  try {
-    const [countData, listData] = await Promise.all([
-      api('/api/notifications/unread-count', { headers: authHeaders() }),
-      api('/api/notifications?limit=40', { headers: authHeaders() })
-    ]);
-    const previousUnread = notificationsUnreadCount;
-    notificationsUnreadCount = countData.count || 0;
-    notificationsCache = listData.notifications || [];
-    updateNotificationBadge();
-    renderNotifications();
-    if (!skipToast && notificationsUnreadCount >= previousUnread) {
-      const newestUnread = notificationsCache.find(n => !n.isRead);
-      if (newestUnread && !shownToastIds.has(newestUnread.id)) showNotificationToast(newestUnread);
-    }
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-function startNotificationPolling() {
-  if (notificationPollTimer) clearInterval(notificationPollTimer);
-  if (!token) return;
-  notificationPollTimer = setInterval(() => {
-    refreshNotifications(false);
-    if (activeConversationId) loadConversations(activeConversationId);
-  }, 8000);
-}
-
-function showNotificationToast(notification) {
-  if (!notification || shownToastIds.has(notification.id)) return;
-  shownToastIds.add(notification.id);
-  const wrap = document.getElementById('notificationToasts');
-  if (!wrap) return;
-  const el = document.createElement('div');
-  el.className = 'notif-toast';
-  el.innerHTML = `<div class="notif-toast-title">${esc(notification.title)}</div><div class="small">${esc(notification.message)}</div>`;
-  el.onclick = () => openNotification(notification.id);
-  wrap.prepend(el);
-  setTimeout(() => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-4px)';
-  }, 3600);
-  setTimeout(() => el.remove(), 4200);
-}
-
-async function markAllNotificationsRead() {
-  try {
-    await api('/api/notifications/read-all', { method: 'PATCH', headers: authHeaders() });
-    notificationsCache = notificationsCache.map(n => ({ ...n, isRead: true }));
-    notificationsUnreadCount = 0;
-    updateNotificationBadge();
-    renderNotifications();
-  } catch (e) { alert(e.message); }
-}
-
-async function openNotification(notificationId) {
-  const item = notificationsCache.find(n => n.id === notificationId);
-  if (!item) return;
-  try {
-    if (!item.isRead) {
-      await api('/api/notifications/' + notificationId + '/read', { method: 'PATCH', headers: authHeaders() });
-      item.isRead = true;
-      notificationsUnreadCount = Math.max(0, notificationsUnreadCount - 1);
-      updateNotificationBadge();
-      renderNotifications();
-    }
-  } catch (e) {
-    console.error(e);
-  }
-
-  toggleNotificationsPanel(false);
-  if (item.type === 'new_message') {
-    activateTab('mensajes');
-    if (item.meta?.conversationId) {
-      activeConversationId = item.meta.conversationId;
-      await loadConversations(item.meta.conversationId);
-    } else {
-      await loadConversations();
-    }
-    return;
-  }
-  if (item.type === 'favorite_profile_updated') {
-    activateTab('favoritos');
-    await loadFavorites(true);
-    return;
-  }
-  if (item.type === 'added_to_favorites') {
-    activateTab('explorar');
-    await loadProfiles();
-  }
 }
 
 function fillMyProfile() {
@@ -505,6 +436,10 @@ function fillMyProfile() {
   document.getElementById("profilePlan").value = currentProfile?.plan || "free";
   document.getElementById("profileTags").value = (currentProfile?.tags || []).join(", ");
   document.getElementById("profileDescription").value = currentProfile?.description || "";
+  document.getElementById("profilePhotoHidden").value = currentProfile?.profilePhoto || "";
+  document.getElementById("coverPhotoHidden").value = currentProfile?.coverPhoto || "";
+  setUploadPreview("profilePhotoPreview", currentProfile?.profilePhoto || "", true);
+  setUploadPreview("coverPhotoPreview", currentProfile?.coverPhoto || "", false);
 }
 
 async function saveMyProfile() {
@@ -519,7 +454,9 @@ async function saveMyProfile() {
         phone: document.getElementById("profilePhone").value.trim(),
         plan: document.getElementById("profilePlan").value,
         tags: document.getElementById("profileTags").value.split(",").map(x => x.trim()).filter(Boolean),
-        description: document.getElementById("profileDescription").value.trim()
+        description: document.getElementById("profileDescription").value.trim(),
+        profilePhoto: document.getElementById("profilePhotoHidden").value,
+        coverPhoto: document.getElementById("coverPhotoHidden").value
       })
     });
     currentProfile = data.profile;
@@ -618,7 +555,9 @@ function renderProfiles() {
 
   box.innerHTML = profilesCache.map(p => `
     <div class="item">
-      <div class="item-top">
+      ${renderCover(p, 120)}
+      <div class="profile-head">
+        ${renderAvatar(p, 86)}
         <div>
           <h3 style="margin:0 0 6px 0">${esc(p.name)}</h3>
           <div class="row">
@@ -721,8 +660,14 @@ function renderFavorites() {
   box.className = "";
   box.innerHTML = items.map(p => `
     <div class="review">
-      <strong>${esc(p.name)}</strong>
-      <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
+      ${renderCover(p, 90)}
+      <div class="profile-head">
+        ${renderAvatar(p, 72)}
+        <div>
+          <strong>${esc(p.name)}</strong>
+          <div class="small muted">${esc(p.city || "Sin ciudad")} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
+        </div>
+      </div>
       <div style="margin-top:8px">${esc(p.description || "Sin descripción")}</div>
       <div class="row" style="margin-top:10px">
         ${p.phone ? `<a class="btn" href="https://wa.me/${normalizePhone(p.phone)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ""}
@@ -879,6 +824,7 @@ function activateTab(tab) {
   document.getElementById('tab-' + tab).classList.remove('hidden');
   if (tab === 'admin' && currentUser?.role === 'admin') loadAdmin();
   if (tab === 'mensajes' && token) loadConversations(activeConversationId);
+  if (tab === 'favoritos' && token) loadFavorites(true);
 }
 
 async function loadAdmin() {
@@ -1010,12 +956,114 @@ async function deleteUser(id) {
 }
 
 
-document.addEventListener('click', (e) => {
-  const wrap = document.getElementById('notificationWrap');
-  const panel = document.getElementById('notifPanel');
-  if (!wrap || !panel || panel.classList.contains('hidden')) return;
-  if (!wrap.contains(e.target)) panel.classList.add('hidden');
-});
+function toggleNotifications() {
+  document.getElementById("notificationsPanel").classList.toggle("hidden");
+  if (!document.getElementById("notificationsPanel").classList.contains("hidden")) {
+    loadNotifications();
+  }
+}
+
+async function loadNotificationCount() {
+  if (!token) return;
+  try {
+    const data = await api("/api/notifications/unread-count", { headers: authHeaders() });
+    notificationsUnreadCount = Number(data.count || 0);
+    const badge = document.getElementById("notifCount");
+    badge.textContent = String(notificationsUnreadCount);
+    badge.classList.toggle("hidden", notificationsUnreadCount <= 0);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+
+function renderNotifications() {
+  const box = document.getElementById("notificationsList");
+  if (!box) return;
+  if (!notificationsCache.length) {
+    box.innerHTML = `<div class="empty">No hay notificaciones.</div>`;
+    return;
+  }
+  box.innerHTML = notificationsCache.map(n => {
+    const safeLink = String(n.link || "").replaceAll("'", "&#039;");
+    return `
+    <div class="notif-item ${n.isRead ? "" : "unread"}" onclick="openNotification('${n.id}', '${safeLink}')">
+      <div class="notif-item-title">${esc(n.title)}</div>
+      <div>${esc(n.body)}</div>
+      <div class="small muted" style="margin-top:6px">${new Date(n.createdAt).toLocaleString("es-AR")}</div>
+    </div>`;
+  }).join("");
+}
+
+
+
+async function loadNotifications() {
+  if (!token) return;
+  try {
+    const type = document.getElementById("notifFilter")?.value || "";
+    const suffix = type ? `?type=${encodeURIComponent(type)}` : "";
+    const data = await api("/api/notifications" + suffix, { headers: authHeaders() });
+    notificationsCache = data.notifications || [];
+    renderNotifications();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function openNotification(id, link) {
+  try {
+    await api("/api/notifications/" + id + "/read", {
+      method: "PATCH",
+      headers: authHeaders()
+    });
+    await loadNotificationCount();
+    await loadNotifications();
+    if (link) {
+      const url = new URL(link, window.location.origin);
+      const tab = url.searchParams.get("tab");
+      const conversationId = url.searchParams.get("conversationId");
+      if (tab) activateTab(tab);
+      if (conversationId) await openConversation(conversationId, true);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function markAllNotificationsRead() {
+  try {
+    await api("/api/notifications/read-all", {
+      method: "PATCH",
+      headers: authHeaders()
+    });
+    await loadNotificationCount();
+    await loadNotifications();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function showNotificationToast(notification) {
+  if (!notification || notification.isRead) return;
+  if (notification.id === lastToastNotificationId) return;
+  lastToastNotificationId = notification.id;
+  const box = document.getElementById("notificationToast");
+  box.innerHTML = `<strong>${esc(notification.title)}</strong><div style="margin-top:6px">${esc(notification.body)}</div>`;
+  box.classList.remove("hidden");
+  box.onclick = () => openNotification(notification.id, notification.link || "");
+  clearTimeout(showNotificationToast._timer);
+  showNotificationToast._timer = setTimeout(() => box.classList.add("hidden"), 4500);
+}
+
+function startNotificationPolling() {
+  clearInterval(startNotificationPolling._interval);
+  if (!token) return;
+  startNotificationPolling._interval = setInterval(async () => {
+    await loadNotificationCount();
+    await loadNotifications();
+    if (notificationsCache.length) showNotificationToast(notificationsCache[0]);
+  }, 10000);
+}
 
 function bindTabs() {
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1027,6 +1075,14 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey && document.activeElement === document.getElementById("messageInput")) {
     e.preventDefault();
     sendMessage();
+  }
+});
+
+document.addEventListener("click", (e) => {
+  const wrap = document.querySelector(".notif-wrap");
+  const panel = document.getElementById("notificationsPanel");
+  if (wrap && panel && !wrap.contains(e.target)) {
+    panel.classList.add("hidden");
   }
 });
 
