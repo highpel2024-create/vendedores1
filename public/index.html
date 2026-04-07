@@ -238,13 +238,20 @@
             <option value="AMBA">AMBA</option>
             <option value="Interior">Interior</option>
           </select></div>
+          <div><label>Zona de trabajo</label><input id="profileWorkAreas" placeholder="Ej: AMBA, GBA Oeste, todo el país"></div>
           <div><label>Rubro</label><input id="profileIndustry"></div>
+          <div><label>Años de experiencia</label><input id="profileExperienceYears" placeholder="Ej: 5 años"></div>
           <div><label>Teléfono</label><input id="profilePhone"></div>
+          <div><label>Sitio web o red</label><input id="profileWebsite" placeholder="https://... o Instagram/Facebook"></div>
           <div><label>Plan</label><select id="profilePlan"><option value="free">Free</option><option value="premium">Premium</option></select></div>
           <div><label>Etiquetas</label><input id="profileTags" placeholder="mayorista, retail, tecnología"></div>
         </div>
         <div style="height:10px"></div>
-        <div><label>Descripción</label><textarea id="profileDescription"></textarea></div>
+        <div><label>Servicios ofrecidos</label><input id="profileServices" placeholder="ventas, distribución, representación, logística"></div>
+        <div style="height:10px"></div>
+        <div><label>Horarios</label><input id="profileWorkSchedule" placeholder="Lunes a viernes de 9 a 18 hs"></div>
+        <div style="height:10px"></div>
+        <div><label>Descripción</label><textarea id="profileDescription" placeholder="Contá qué ofrecés, cómo trabajás y qué zona cubrís"></textarea></div>
         <div style="height:12px"></div>
         <div class="row">
           <button class="btn btn-primary" onclick="saveMyProfile()">Guardar perfil</button>
@@ -964,10 +971,15 @@ function fillMyProfile() {
   document.getElementById("profileCity").value = currentProfile?.city || "";
   document.getElementById("profileProvince").value = currentProfile?.province || "";
   document.getElementById("profileZone").value = currentProfile?.zone || "";
+  document.getElementById("profileWorkAreas").value = currentProfile?.workAreas || "";
   document.getElementById("profileIndustry").value = currentProfile?.industry || "";
+  document.getElementById("profileExperienceYears").value = currentProfile?.experienceYears || "";
   document.getElementById("profilePhone").value = currentProfile?.phone || "";
+  document.getElementById("profileWebsite").value = currentProfile?.website || "";
   document.getElementById("profilePlan").value = currentProfile?.plan || "free";
   document.getElementById("profileTags").value = (currentProfile?.tags || []).join(", ");
+  document.getElementById("profileServices").value = (currentProfile?.services || []).join(", ");
+  document.getElementById("profileWorkSchedule").value = currentProfile?.workSchedule || "";
   document.getElementById("profileDescription").value = currentProfile?.description || "";
   pendingProfilePhoto = currentProfile?.photoUrl || "";
   pendingCoverPhoto = currentProfile?.coverUrl || "";
@@ -991,10 +1003,15 @@ async function saveMyProfile() {
         city: document.getElementById("profileCity").value.trim(),
         province: document.getElementById("profileProvince").value.trim(),
         zone: document.getElementById("profileZone").value.trim(),
+        workAreas: document.getElementById("profileWorkAreas").value.trim(),
         industry: document.getElementById("profileIndustry").value.trim(),
+        experienceYears: document.getElementById("profileExperienceYears").value.trim(),
         phone: document.getElementById("profilePhone").value.trim(),
+        website: document.getElementById("profileWebsite").value.trim(),
         plan: document.getElementById("profilePlan").value,
         tags: document.getElementById("profileTags").value.split(",").map(x => x.trim()).filter(Boolean),
+        services: document.getElementById("profileServices").value.split(",").map(x => x.trim()).filter(Boolean),
+        workSchedule: document.getElementById("profileWorkSchedule").value.trim(),
         description: document.getElementById("profileDescription").value.trim(),
         photoUrl: pendingProfilePhoto,
         coverUrl: pendingCoverPhoto,
@@ -1243,7 +1260,8 @@ function renderFavorites() {
         ${renderAvatar(p.photoUrl, p.name, 'avatar-sm')}
         <div>
           <strong>${esc(p.name)}</strong>
-          <div class="small muted">${formatLocation(p)} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}</div>
+          <div class="small muted">${formatLocation(p)} · ${esc(p.industry || "Sin rubro")} · ${esc(p.plan)}${p.experienceYears ? ` · ${esc(p.experienceYears)}` : ""}</div>
+          ${p.workAreas ? `<div class="small muted">Zona de trabajo: ${esc(p.workAreas)}</div>` : ``}
         </div>
       </div>
       <div style="margin-top:8px">${esc(p.description || "Sin descripción")}</div>
