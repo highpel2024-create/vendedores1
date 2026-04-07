@@ -57,9 +57,14 @@ async function initDb() {
       city TEXT DEFAULT '',
       province TEXT DEFAULT '',
       zone TEXT DEFAULT '',
+      work_areas TEXT DEFAULT '',
       industry TEXT DEFAULT '',
+      experience_years TEXT DEFAULT '',
+      services_json TEXT DEFAULT '[]',
+      work_schedule TEXT DEFAULT '',
       description TEXT DEFAULT '',
       phone TEXT DEFAULT '',
+      website TEXT DEFAULT '',
       email TEXT DEFAULT '',
       tags_json TEXT DEFAULT '[]',
       plan TEXT NOT NULL DEFAULT 'free',
@@ -78,6 +83,21 @@ async function initDb() {
 
   await query(`
     ALTER TABLE profiles ADD COLUMN IF NOT EXISTS zone TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS work_areas TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS experience_years TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS services_json TEXT DEFAULT '[]';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS work_schedule TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS website TEXT DEFAULT '';
   `);
 
   await query(`
@@ -191,9 +211,14 @@ function mapProfile(row) {
     city: row.city,
     province: row.province || "",
     zone: row.zone || "",
+    workAreas: row.work_areas || "",
     industry: row.industry,
+    experienceYears: row.experience_years || "",
+    services: JSON.parse(row.services_json || "[]"),
+    workSchedule: row.work_schedule || "",
     description: row.description,
     phone: row.phone,
+    website: row.website || "",
     email: row.email,
     tags: JSON.parse(row.tags_json || "[]"),
     plan: row.plan,
@@ -373,7 +398,7 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
 
 app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
   try {
-    const { name, city, province, zone, industry, description, phone, tags, plan, photoUrl, coverUrl, galleryUrls } = req.body || {};
+    const { name, city, province, zone, workAreas, industry, experienceYears, services, workSchedule, description, phone, website, tags, plan, photoUrl, coverUrl, galleryUrls } = req.body || {};
     if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
 
     const existing = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
@@ -411,8 +436,8 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
       const profileId = makeId();
       await query(
         `INSERT INTO profiles
-         (id, user_id, type, name, city, province, zone, industry, description, phone, email, tags_json, plan, verified, photo_url, cover_url, gallery_json)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
+         (id, user_id, type, name, city, province, zone, work_areas, industry, experience_years, services_json, work_schedule, description, phone, website, email, tags_json, plan, verified, photo_url, cover_url, gallery_json)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)`,
         [
           profileId,
           req.user.id,
@@ -421,9 +446,14 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
           String(city || "").trim(),
           String(province || "").trim(),
           String(zone || "").trim(),
+          String(workAreas || "").trim(),
           String(industry || "").trim(),
+          String(experienceYears || "").trim(),
+          JSON.stringify(Array.isArray(services) ? services.map(s => String(s).trim()).filter(Boolean) : []),
+          String(workSchedule || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
+          String(website || "").trim(),
           req.user.email,
           tagsJson,
           normalizedPlan,
@@ -436,16 +466,21 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
     } else {
       await query(
         `UPDATE profiles
-         SET name=$1, city=$2, province=$3, zone=$4, industry=$5, description=$6, phone=$7, tags_json=$8, plan=$9, photo_url=$10, cover_url=$11, gallery_json=$12, updated_at=NOW()
-         WHERE user_id=$13`,
+         SET name=$1, city=$2, province=$3, zone=$4, work_areas=$5, industry=$6, experience_years=$7, services_json=$8, work_schedule=$9, description=$10, phone=$11, website=$12, tags_json=$13, plan=$14, photo_url=$15, cover_url=$16, gallery_json=$17, updated_at=NOW()
+         WHERE user_id=$18`,
         [
           String(name).trim(),
           String(city || "").trim(),
           String(province || "").trim(),
           String(zone || "").trim(),
+          String(workAreas || "").trim(),
           String(industry || "").trim(),
+          String(experienceYears || "").trim(),
+          JSON.stringify(Array.isArray(services) ? services.map(s => String(s).trim()).filter(Boolean) : []),
+          String(workSchedule || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
+          String(website || "").trim(),
           tagsJson,
           normalizedPlan,
           normalizedPhotoUrl,
@@ -485,7 +520,7 @@ app.get("/api/profiles", async (req, res) => {
     let rows = result.rows;
     if (q) {
       rows = rows.filter(r =>
-        [r.name, r.city, r.province, r.zone, r.industry, r.description, r.tags_json].join(" ").toLowerCase().includes(q)
+        [r.name, r.city, r.province, r.zone, r.work_areas, r.industry, r.experience_years, r.services_json, r.work_schedule, r.description, r.website, r.tags_json].join(" ").toLowerCase().includes(q)
       );
     }
     if (role && role !== "todos") rows = rows.filter(r => r.type === role);
