@@ -186,6 +186,19 @@ async function initDb() {
     );
   `);
 
+  await query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL DEFAULT '',
+      link TEXT NOT NULL DEFAULT '',
+      read_at TIMESTAMP NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    );
+  `);
+
   const adminEmail = "admin@demo.com";
   const existing = await query(`SELECT id FROM users WHERE email = $1 LIMIT 1`, [adminEmail]);
   if (!existing.rows.length) {
@@ -283,6 +296,14 @@ async function enrichProfiles(rows) {
     });
   }
   return output;
+}
+
+async function createNotification(userId, type, title, body = "", link = "") {
+  if (!userId) return;
+  await query(
+    `INSERT INTO notifications (id, user_id, type, title, body, link) VALUES ($1,$2,$3,$4,$5,$6)`,
+    [makeId(), userId, String(type || "info"), String(title || "Notificación"), String(body || ""), String(link || "")]
+  );
 }
 
 
@@ -389,7 +410,11 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
   try {
     const profileResult = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
     const profile = profileResult.rows[0] ? mapProfile(profileResult.rows[0]) : null;
-    res.json({ ok: true, user: sanitizeUser(req.user), profile });
+    const notificationStats = await query(
+      `SELECT COUNT(*)::int AS unread_count FROM notifications WHERE user_id = $1 AND read_at IS NULL`,
+      [req.user.id]
+    );
+    res.json({ ok: true, user: sanitizeUser(req.user), profile, notifications: { unreadCount: notificationStats.rows[0]?.unread_count || 0 } });
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: "Error interno" });
@@ -587,11 +612,21 @@ app.post("/api/favorites", authRequired, loadUser, async (req, res) => {
       return res.status(400).json({ error: "No podés guardarte a vos mismo" });
     }
 
-    await query(
+    const insertResult = await query(
       `INSERT INTO favorites (id, user_id, profile_id) VALUES ($1,$2,$3)
        ON CONFLICT (user_id, profile_id) DO NOTHING`,
       [makeId(), req.user.id, profileId]
     );
+
+    if (insertResult.rowCount > 0) {
+      await createNotification(
+        target.rows[0].user_id,
+        'favorite',
+        'Nuevo favorito',
+        `${req.user.name} guardó tu perfil en favoritos.`,
+        'favoritos'
+      );
+    }
 
     res.json({ ok: true });
   } catch (e) {
@@ -661,6 +696,14 @@ app.post("/api/reviews", authRequired, loadUser, async (req, res) => {
       `INSERT INTO reviews (id, author_user_id, target_profile_id, score, comment)
        VALUES ($1,$2,$3,$4,$5)`,
       [reviewId, req.user.id, targetProfileId, scoreNum, String(comment).trim()]
+    );
+
+    await createNotification(
+      target.rows[0].user_id,
+      'review',
+      'Nueva reseña',
+      `${req.user.name} te dejó una reseña de ${scoreNum} estrella${scoreNum === 1 ? '' : 's'}.`,
+      'explorar'
     );
 
     res.json({ ok: true });
@@ -949,6 +992,65 @@ app.post("/api/conversations/:id/messages", authRequired, loadUser, async (req, 
       [makeId(), req.params.id, req.user.id, text, JSON.stringify([req.user.id])]
     );
     await query(`UPDATE conversations SET updated_at = NOW() WHERE id = $1`, [req.params.id]);
+
+    const otherUserId = conversation.user_a_id === req.user.id ? conversation.user_b_id : conversation.user_a_id;
+    await createNotification(
+      otherUserId,
+      'message',
+      `Nuevo mensaje de ${req.user.name}`,
+      text.slice(0, 160),
+      `mensajes:${req.params.id}`
+    );
+
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.get('/api/notifications', authRequired, loadUser, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC LIMIT 100`,
+      [req.user.id]
+    );
+    const unread = await query(
+      `SELECT COUNT(*)::int AS c FROM notifications WHERE user_id = $1 AND read_at IS NULL`,
+      [req.user.id]
+    );
+    res.json({
+      ok: true,
+      unreadCount: unread.rows[0]?.c || 0,
+      notifications: result.rows.map(r => ({
+        id: r.id,
+        type: r.type,
+        title: r.title,
+        body: r.body,
+        link: r.link,
+        readAt: r.read_at,
+        createdAt: r.created_at
+      }))
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.post('/api/notifications/read-all', authRequired, loadUser, async (req, res) => {
+  try {
+    await query(`UPDATE notifications SET read_at = NOW() WHERE user_id = $1 AND read_at IS NULL`, [req.user.id]);
+    res.json({ ok: true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Error interno' });
+  }
+});
+
+app.post('/api/notifications/:id/read', authRequired, loadUser, async (req, res) => {
+  try {
+    await query(`UPDATE notifications SET read_at = NOW() WHERE id = $1 AND user_id = $2`, [req.params.id, req.user.id]);
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -1127,6 +1229,25 @@ app.patch("/api/admin/profiles/:id", authRequired, loadUser, adminRequired, asyn
       `UPDATE profiles SET verified = $1, plan = $2, updated_at = NOW() WHERE id = $3`,
       [newVerified, newPlan, req.params.id]
     );
+
+    if (newVerified !== profile.rows[0].verified) {
+      await createNotification(
+        profile.rows[0].user_id,
+        'verified',
+        newVerified === 'si' ? 'Tu perfil fue verificado' : 'Tu verificación fue actualizada',
+        newVerified === 'si' ? 'Ahora tu perfil muestra el sello de verificado.' : 'Tu perfil ya no figura como verificado.',
+        'miPerfil'
+      );
+    }
+    if (newPlan !== profile.rows[0].plan) {
+      await createNotification(
+        profile.rows[0].user_id,
+        'plan',
+        `Tu plan ahora es ${newPlan === 'premium' ? 'Premium' : 'Free'}`,
+        newPlan === 'premium' ? 'Tu perfil tiene beneficios premium activos.' : 'Tu perfil volvió al plan Free.',
+        'miPerfil'
+      );
+    }
 
     const updated = await query(`SELECT * FROM profiles WHERE id = $1 LIMIT 1`, [req.params.id]);
     res.json({ ok: true, profile: mapProfile(updated.rows[0]) });
