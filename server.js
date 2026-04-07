@@ -24,7 +24,7 @@ const pool = new Pool({
     : false
 });
 
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "8mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
 function makeId() {
@@ -55,16 +55,61 @@ async function initDb() {
       type TEXT NOT NULL,
       name TEXT NOT NULL,
       city TEXT DEFAULT '',
+      province TEXT DEFAULT '',
+      zone TEXT DEFAULT '',
+      work_areas TEXT DEFAULT '',
       industry TEXT DEFAULT '',
+      experience_years TEXT DEFAULT '',
+      services_json TEXT DEFAULT '[]',
+      work_schedule TEXT DEFAULT '',
       description TEXT DEFAULT '',
       phone TEXT DEFAULT '',
+      website TEXT DEFAULT '',
       email TEXT DEFAULT '',
       tags_json TEXT DEFAULT '[]',
       plan TEXT NOT NULL DEFAULT 'free',
       verified TEXT NOT NULL DEFAULT 'no',
+      photo_url TEXT DEFAULT '',
+      cover_url TEXT DEFAULT '',
+      gallery_json TEXT DEFAULT '[]',
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS province TEXT DEFAULT '';
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS zone TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS work_areas TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS experience_years TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS services_json TEXT DEFAULT '[]';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS work_schedule TEXT DEFAULT '';
+  `);
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS website TEXT DEFAULT '';
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS photo_url TEXT DEFAULT '';
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS cover_url TEXT DEFAULT '';
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS gallery_json TEXT DEFAULT '[]';
   `);
 
   await query(`
@@ -141,15 +186,14 @@ async function initDb() {
     );
   `);
 
-
   await query(`
     CREATE TABLE IF NOT EXISTS notifications (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      type TEXT NOT NULL,
-      title TEXT NOT NULL,
-      message TEXT NOT NULL,
-      link TEXT DEFAULT '',
+      type TEXT NOT NULL DEFAULT '',
+      title TEXT NOT NULL DEFAULT '',
+      message TEXT NOT NULL DEFAULT '',
+      link TEXT NOT NULL DEFAULT '',
       data_json TEXT NOT NULL DEFAULT '{}',
       is_read TEXT NOT NULL DEFAULT 'no',
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
@@ -179,13 +223,23 @@ function mapProfile(row) {
     type: row.type,
     name: row.name,
     city: row.city,
+    province: row.province || "",
+    zone: row.zone || "",
+    workAreas: row.work_areas || "",
     industry: row.industry,
+    experienceYears: row.experience_years || "",
+    services: JSON.parse(row.services_json || "[]"),
+    workSchedule: row.work_schedule || "",
     description: row.description,
     phone: row.phone,
+    website: row.website || "",
     email: row.email,
     tags: JSON.parse(row.tags_json || "[]"),
     plan: row.plan,
     verified: row.verified,
+    photoUrl: row.photo_url || "",
+    coverUrl: row.cover_url || "",
+    galleryUrls: (() => { try { return JSON.parse(row.gallery_json || '[]'); } catch { return []; } })(),
     createdAt: row.created_at,
     updatedAt: row.updated_at
   };
@@ -275,13 +329,12 @@ async function conversationAllowed(userId, conversationId) {
   return result.rows[0] || null;
 }
 
-
 async function addNotification(userId, type, title, message, link = '', data = {}) {
   if (!userId) return;
   await query(
     `INSERT INTO notifications (id, user_id, type, title, message, link, data_json, is_read)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-    [makeId(), userId, type, title, message, String(link || ''), JSON.stringify(data || {}), 'no']
+    [makeId(), userId, String(type || ''), String(title || ''), String(message || ''), String(link || ''), JSON.stringify(data || {}), 'no']
   );
 }
 
@@ -368,47 +421,94 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
 
 app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
   try {
-    const { name, city, industry, description, phone, tags, plan } = req.body || {};
+    const { name, city, province, zone, workAreas, industry, experienceYears, services, workSchedule, description, phone, website, tags, plan, photoUrl, coverUrl, galleryUrls } = req.body || {};
     if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
 
     const existing = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
     const normalizedPlan = plan === "premium" ? "premium" : "free";
     const tagsJson = JSON.stringify(Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : []);
+    const normalizedPhotoUrl = String(photoUrl || "").trim();
+    const normalizedCoverUrl = String(coverUrl || "").trim();
+    const normalizedGalleryUrls = Array.isArray(galleryUrls) ? galleryUrls.map(x => String(x || '').trim()).filter(Boolean) : [];
+    if (normalizedPhotoUrl && !normalizedPhotoUrl.startsWith("data:image/")) {
+      return res.status(400).json({ error: "La foto debe ser una imagen válida" });
+    }
+    if (normalizedCoverUrl && !normalizedCoverUrl.startsWith("data:image/")) {
+      return res.status(400).json({ error: "La portada debe ser una imagen válida" });
+    }
+    if (normalizedPhotoUrl.length > 7_000_000) {
+      return res.status(400).json({ error: "La foto es demasiado pesada" });
+    }
+    if (normalizedCoverUrl.length > 9_000_000) {
+      return res.status(400).json({ error: "La portada es demasiado pesada" });
+    }
+    if (normalizedGalleryUrls.length > 6) {
+      return res.status(400).json({ error: "Podés cargar hasta 6 fotos en la galería" });
+    }
+    for (const img of normalizedGalleryUrls) {
+      if (!img.startsWith('data:image/')) {
+        return res.status(400).json({ error: 'La galería debe contener imágenes válidas' });
+      }
+      if (img.length > 5_500_000) {
+        return res.status(400).json({ error: 'Una imagen de la galería es demasiado pesada' });
+      }
+    }
+    const galleryJson = JSON.stringify(normalizedGalleryUrls);
 
     if (!existing.rows.length) {
       const profileId = makeId();
       await query(
         `INSERT INTO profiles
-         (id, user_id, type, name, city, industry, description, phone, email, tags_json, plan, verified)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+         (id, user_id, type, name, city, province, zone, work_areas, industry, experience_years, services_json, work_schedule, description, phone, website, email, tags_json, plan, verified, photo_url, cover_url, gallery_json)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22)`,
         [
           profileId,
           req.user.id,
           req.user.role,
           String(name).trim(),
           String(city || "").trim(),
+          String(province || "").trim(),
+          String(zone || "").trim(),
+          String(workAreas || "").trim(),
           String(industry || "").trim(),
+          String(experienceYears || "").trim(),
+          JSON.stringify(Array.isArray(services) ? services.map(s => String(s).trim()).filter(Boolean) : []),
+          String(workSchedule || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
+          String(website || "").trim(),
           req.user.email,
           tagsJson,
           normalizedPlan,
-          "no"
+          "no",
+          normalizedPhotoUrl,
+          normalizedCoverUrl,
+          galleryJson
         ]
       );
     } else {
       await query(
         `UPDATE profiles
-         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, tags_json=$6, plan=$7, updated_at=NOW()
-         WHERE user_id=$8`,
+         SET name=$1, city=$2, province=$3, zone=$4, work_areas=$5, industry=$6, experience_years=$7, services_json=$8, work_schedule=$9, description=$10, phone=$11, website=$12, tags_json=$13, plan=$14, photo_url=$15, cover_url=$16, gallery_json=$17, updated_at=NOW()
+         WHERE user_id=$18`,
         [
           String(name).trim(),
           String(city || "").trim(),
+          String(province || "").trim(),
+          String(zone || "").trim(),
+          String(workAreas || "").trim(),
           String(industry || "").trim(),
+          String(experienceYears || "").trim(),
+          JSON.stringify(Array.isArray(services) ? services.map(s => String(s).trim()).filter(Boolean) : []),
+          String(workSchedule || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
+          String(website || "").trim(),
           tagsJson,
           normalizedPlan,
+          normalizedPhotoUrl,
+          normalizedCoverUrl,
+          galleryJson,
           req.user.id
         ]
       );
@@ -428,6 +528,8 @@ app.get("/api/profiles", async (req, res) => {
     const role = String(req.query.role || "").trim().toLowerCase();
     const verified = String(req.query.verified || "").trim().toLowerCase();
     const plan = String(req.query.plan || "").trim().toLowerCase();
+    const province = String(req.query.province || "").trim().toLowerCase();
+    const zone = String(req.query.zone || "").trim().toLowerCase();
     const sort = String(req.query.sort || "destacados").trim().toLowerCase();
     const viewerUserId = String(req.query.viewerUserId || "").trim();
 
@@ -441,12 +543,14 @@ app.get("/api/profiles", async (req, res) => {
     let rows = result.rows;
     if (q) {
       rows = rows.filter(r =>
-        [r.name, r.city, r.industry, r.description, r.tags_json].join(" ").toLowerCase().includes(q)
+        [r.name, r.city, r.province, r.zone, r.work_areas, r.industry, r.experience_years, r.services_json, r.work_schedule, r.description, r.website, r.tags_json].join(" ").toLowerCase().includes(q)
       );
     }
     if (role && role !== "todos") rows = rows.filter(r => r.type === role);
     if (verified === "si" || verified === "no") rows = rows.filter(r => r.verified === verified);
     if (plan === "premium" || plan === "free") rows = rows.filter(r => r.plan === plan);
+    if (province && province !== "todos") rows = rows.filter(r => String(r.province || "").trim().toLowerCase() === province);
+    if (zone && zone !== "todos") rows = rows.filter(r => String(r.zone || "").trim().toLowerCase() === zone);
 
     let favoriteMap = new Set();
     if (viewerUserId) {
@@ -916,7 +1020,6 @@ app.post("/api/conversations/:id/messages", authRequired, loadUser, async (req, 
   }
 });
 
-
 app.get("/api/notifications", authRequired, loadUser, async (req, res) => {
   try {
     const result = await query(
@@ -927,9 +1030,9 @@ app.get("/api/notifications", authRequired, loadUser, async (req, res) => {
       ok: true,
       notifications: result.rows.map(r => ({
         id: r.id,
-        type: r.type,
-        title: r.title,
-        message: r.message,
+        type: r.type || '',
+        title: r.title || 'Notificación',
+        message: r.message || '',
         link: r.link || '',
         isRead: r.is_read === 'si',
         createdAt: r.created_at,
