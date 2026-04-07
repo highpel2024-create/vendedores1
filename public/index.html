@@ -36,11 +36,6 @@
     .bubble{max-width:78%;padding:12px 14px;border-radius:16px;margin-bottom:10px;border:1px solid rgba(255,255,255,.08)}
     .bubble.me{margin-left:auto;background:rgba(34,197,94,.12)} .bubble.other{background:rgba(255,255,255,.05)}
     .unread-dot{display:inline-flex;min-width:22px;height:22px;padding:0 6px;align-items:center;justify-content:center;border-radius:999px;background:var(--accent);color:#052e16;font-size:12px;font-weight:bold}
-    .notifications-list{display:grid;gap:12px}
-    .notification-item{padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:16px;background:rgba(255,255,255,.03)}
-    .notification-item.unread{border-color:rgba(34,197,94,.42);background:rgba(34,197,94,.08)}
-    .notification-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-    .notification-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .chat-compose{display:grid;grid-template-columns:1fr auto;gap:12px;margin-top:12px}
     .profile-cover-editor{margin-bottom:16px}
     .profile-cover-preview,.profile-cover-card{width:100%;height:190px;border-radius:22px;object-fit:cover;border:1px solid rgba(255,255,255,.10);background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(56,189,248,.14),rgba(139,92,246,.14))}
@@ -148,7 +143,6 @@
       <button class="tab-btn" data-tab="explorar">Explorar</button>
       <button class="tab-btn hidden" id="favoritesTabBtn" data-tab="favoritos">Favoritos</button>
       <button class="tab-btn hidden" id="messagesTabBtn" data-tab="mensajes">Mensajes</button>
-      <button class="tab-btn hidden" id="notificationsTabBtn" data-tab="notificaciones">Notificaciones <span id="notificationsBadge" class="unread-dot hidden">0</span></button>
       <button class="tab-btn hidden" id="adminTabBtn" data-tab="admin">Admin</button>
     </div>
 
@@ -330,19 +324,6 @@
       </div>
     </section>
 
-    <section id="tab-notificaciones" class="tab-panel hidden">
-      <div class="card">
-        <div class="section-title">
-          <h3 style="margin:0">Notificaciones</h3>
-          <div class="row">
-            <button class="btn" onclick="loadNotifications()">Actualizar</button>
-            <button class="btn btn-secondary" onclick="markAllNotificationsRead()">Marcar todas como leídas</button>
-          </div>
-        </div>
-        <div style="height:12px"></div>
-        <div id="notificationsList" class="empty">Todavía no tenés notificaciones.</div>
-      </div>
-    </section>
 
     <section id="tab-mensajes" class="tab-panel hidden">
       <div class="chat-layout">
@@ -449,8 +430,6 @@ let favoriteIds = [];
 let conversationsCache = [];
 let activeConversationId = "";
 let messagesCache = [];
-let notificationsCache = [];
-let unreadNotifications = 0;
 let pendingProfilePhoto = "";
 let pendingCoverPhoto = "";
 let pendingGalleryPhotos = [];
@@ -979,13 +958,10 @@ async function loadMe() {
     document.getElementById("adminTabBtn").classList.toggle("hidden", currentUser.role !== "admin");
     document.getElementById("favoritesTabBtn").classList.toggle("hidden", !token);
     document.getElementById("messagesTabBtn").classList.toggle("hidden", !token);
-    document.getElementById("notificationsTabBtn").classList.toggle("hidden", !token);
     fillMyProfile();
     showApp();
-    updateNotificationsBadge(data.notifications?.unreadCount || 0);
     await loadProfiles();
     await loadConversations();
-    await loadNotifications();
     if (currentUser.role === "admin") await loadAdmin();
   } catch { logout(); }
 }
@@ -1046,7 +1022,6 @@ async function saveMyProfile() {
     fillMyProfile();
     alert("Perfil guardado.");
     await loadProfiles();
-    await loadNotifications();
   } catch (e) { alert(e.message); }
 }
 
@@ -1312,82 +1287,11 @@ async function toggleFavorite(profileId) {
     });
     await loadFavorites(true);
     await loadProfiles();
-    await loadNotifications();
   } catch (e) {
     alert(e.message);
   }
 }
 
-
-function updateNotificationsBadge(count) {
-  unreadNotifications = Number(count) || 0;
-  const badge = document.getElementById("notificationsBadge");
-  if (!badge) return;
-  badge.textContent = unreadNotifications > 99 ? '99+' : String(unreadNotifications);
-  badge.classList.toggle('hidden', unreadNotifications <= 0);
-}
-
-async function loadNotifications() {
-  if (!token) return;
-  try {
-    const data = await api('/api/notifications', { headers: authHeaders() });
-    notificationsCache = data.notifications || [];
-    updateNotificationsBadge(data.unreadCount || 0);
-    const box = document.getElementById('notificationsList');
-    if (!notificationsCache.length) {
-      box.className = 'empty';
-      box.innerHTML = 'Todavía no tenés notificaciones.';
-      return;
-    }
-    box.className = 'notifications-list';
-    box.innerHTML = notificationsCache.map(n => `
-      <div class="notification-item ${!n.readAt ? 'unread' : ''}">
-        <div class="notification-top">
-          <div>
-            <strong>${esc(n.title)}</strong>
-            <div class="small muted">${new Date(n.createdAt).toLocaleString('es-AR')}</div>
-          </div>
-          ${!n.readAt ? '<span class="unread-dot">Nuevo</span>' : ''}
-        </div>
-        <div style="height:8px"></div>
-        <div>${esc(n.body || '')}</div>
-        <div class="notification-actions">
-          ${!n.readAt ? `<button class="btn" onclick="markNotificationRead('${n.id}')">Marcar leída</button>` : ''}
-          ${n.link ? `<button class="btn btn-primary" onclick="openNotificationLink('${esc(n.id)}','${esc(n.link)}')">Abrir</button>` : ''}
-        </div>
-      </div>
-    `).join('');
-  } catch (e) { console.error(e); }
-}
-
-async function markNotificationRead(id, reload = true) {
-  try {
-    await api('/api/notifications/' + id + '/read', { method: 'POST', headers: authHeaders(), body: JSON.stringify({}) });
-    if (reload) await loadNotifications();
-  } catch (e) { alert(e.message); }
-}
-
-async function markAllNotificationsRead() {
-  try {
-    await api('/api/notifications/read-all', { method: 'POST', headers: authHeaders(), body: JSON.stringify({}) });
-    await loadNotifications();
-  } catch (e) { alert(e.message); }
-}
-
-async function openNotificationLink(id, link) {
-  if (id) await markNotificationRead(id, false);
-  if (!link) return loadNotifications();
-  if (String(link).startsWith('mensajes:')) {
-    const conversationId = String(link).split(':').slice(1).join(':');
-    activateTab('mensajes');
-    await loadConversations(conversationId);
-    return;
-  }
-  if (link === 'favoritos') { activateTab('favoritos'); await loadFavorites(true); return; }
-  if (link === 'miPerfil') { activateTab('miPerfil'); await loadMe(); return; }
-  if (link === 'explorar') { activateTab('explorar'); await loadProfiles(); return; }
-  await loadNotifications();
-}
 
 async function loadConversations(preferredId = '') {
   if (!token) {
@@ -1517,7 +1421,6 @@ function activateTab(tab) {
   document.getElementById('tab-' + tab).classList.remove('hidden');
   if (tab === 'admin' && currentUser?.role === 'admin') loadAdmin();
   if (tab === 'mensajes' && token) loadConversations(activeConversationId);
-  if (tab === 'notificaciones' && token) loadNotifications();
 }
 
 async function loadAdmin() {
@@ -1664,5 +1567,6 @@ document.addEventListener("keydown", (e) => {
 bindTabs();
 if (token) loadMe();
 </script>
+  <script src="_script_check.js"></script>
 </body>
 </html>
