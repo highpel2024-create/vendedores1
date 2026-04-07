@@ -55,6 +55,8 @@ async function initDb() {
       type TEXT NOT NULL,
       name TEXT NOT NULL,
       city TEXT DEFAULT '',
+      province TEXT DEFAULT '',
+      zone TEXT DEFAULT '',
       industry TEXT DEFAULT '',
       description TEXT DEFAULT '',
       phone TEXT DEFAULT '',
@@ -68,6 +70,14 @@ async function initDb() {
       created_at TIMESTAMP NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS province TEXT DEFAULT '';
+  `);
+
+  await query(`
+    ALTER TABLE profiles ADD COLUMN IF NOT EXISTS zone TEXT DEFAULT '';
   `);
 
   await query(`
@@ -179,6 +189,8 @@ function mapProfile(row) {
     type: row.type,
     name: row.name,
     city: row.city,
+    province: row.province || "",
+    zone: row.zone || "",
     industry: row.industry,
     description: row.description,
     phone: row.phone,
@@ -361,7 +373,7 @@ app.get("/api/me", authRequired, loadUser, async (req, res) => {
 
 app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
   try {
-    const { name, city, industry, description, phone, tags, plan, photoUrl, coverUrl, galleryUrls } = req.body || {};
+    const { name, city, province, zone, industry, description, phone, tags, plan, photoUrl, coverUrl, galleryUrls } = req.body || {};
     if (!name) return res.status(400).json({ error: "El nombre es obligatorio" });
 
     const existing = await query(`SELECT * FROM profiles WHERE user_id = $1 LIMIT 1`, [req.user.id]);
@@ -399,14 +411,16 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
       const profileId = makeId();
       await query(
         `INSERT INTO profiles
-         (id, user_id, type, name, city, industry, description, phone, email, tags_json, plan, verified, photo_url, cover_url, gallery_json)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+         (id, user_id, type, name, city, province, zone, industry, description, phone, email, tags_json, plan, verified, photo_url, cover_url, gallery_json)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
         [
           profileId,
           req.user.id,
           req.user.role,
           String(name).trim(),
           String(city || "").trim(),
+          String(province || "").trim(),
+          String(zone || "").trim(),
           String(industry || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
@@ -422,11 +436,13 @@ app.post("/api/profiles", authRequired, loadUser, async (req, res) => {
     } else {
       await query(
         `UPDATE profiles
-         SET name=$1, city=$2, industry=$3, description=$4, phone=$5, tags_json=$6, plan=$7, photo_url=$8, cover_url=$9, gallery_json=$10, updated_at=NOW()
-         WHERE user_id=$11`,
+         SET name=$1, city=$2, province=$3, zone=$4, industry=$5, description=$6, phone=$7, tags_json=$8, plan=$9, photo_url=$10, cover_url=$11, gallery_json=$12, updated_at=NOW()
+         WHERE user_id=$13`,
         [
           String(name).trim(),
           String(city || "").trim(),
+          String(province || "").trim(),
+          String(zone || "").trim(),
           String(industry || "").trim(),
           String(description || "").trim(),
           String(phone || "").trim(),
@@ -454,6 +470,8 @@ app.get("/api/profiles", async (req, res) => {
     const role = String(req.query.role || "").trim().toLowerCase();
     const verified = String(req.query.verified || "").trim().toLowerCase();
     const plan = String(req.query.plan || "").trim().toLowerCase();
+    const province = String(req.query.province || "").trim().toLowerCase();
+    const zone = String(req.query.zone || "").trim().toLowerCase();
     const sort = String(req.query.sort || "destacados").trim().toLowerCase();
     const viewerUserId = String(req.query.viewerUserId || "").trim();
 
@@ -467,12 +485,14 @@ app.get("/api/profiles", async (req, res) => {
     let rows = result.rows;
     if (q) {
       rows = rows.filter(r =>
-        [r.name, r.city, r.industry, r.description, r.tags_json].join(" ").toLowerCase().includes(q)
+        [r.name, r.city, r.province, r.zone, r.industry, r.description, r.tags_json].join(" ").toLowerCase().includes(q)
       );
     }
     if (role && role !== "todos") rows = rows.filter(r => r.type === role);
     if (verified === "si" || verified === "no") rows = rows.filter(r => r.verified === verified);
     if (plan === "premium" || plan === "free") rows = rows.filter(r => r.plan === plan);
+    if (province && province !== "todos") rows = rows.filter(r => String(r.province || "").trim().toLowerCase() === province);
+    if (zone && zone !== "todos") rows = rows.filter(r => String(r.zone || "").trim().toLowerCase() === zone);
 
     let favoriteMap = new Set();
     if (viewerUserId) {
